@@ -79,7 +79,7 @@
                     <div class="card-body">
                         <div class="d-flex gap-2 flex-wrap">
                             <c:if test="${cita.estadoCita != 'realizada' && cita.estadoCita != 'cancelada'}">
-                                <button class="btn btn-sm btn-success" onclick="cambiarEstado('realizada')">
+                                <button class="btn btn-sm btn-success marcar-realizada-detalle" onclick="validarYMarcarRealizadaAdmin()" title="Marcar como Realizada">
                                     <i class="bi bi-check-circle-fill me-2"></i>Marcar como Realizada
                                 </button>
                             </c:if>
@@ -286,11 +286,7 @@
                            class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-calendar-plus me-2"></i>Nueva Cita para este Paciente
                         </a>
-                        <c:if test="${cita.estadoCita == 'realizada'}">
-                            <button type="button" class="btn btn-outline-success btn-sm" onclick="generarInforme()">
-                                <i class="bi bi-file-earmark-text me-2"></i>Generar Informe
-                            </button>
-                        </c:if>
+                        <!-- Botón de Generar Informe removido por solicitud -->
                     </div>
                 </div>
             </div>
@@ -546,6 +542,36 @@ function generarInforme() {
 // Helpers to fetch and populate available hours in detail modal
 const CTX_DETALLE = '${pageContext.request.contextPath}';
 const FECHA_CITA_ISO_DETALLE = '<fmt:formatDate value="${cita.fechaHora}" pattern="yyyy-MM-dd"/>';
+const FECHA_CITA_TS_DETALLE = ${cita.fechaHora.time};
+function dateKeyInTz(date, tz){
+    const f=new Intl.DateTimeFormat('en-CA',{timeZone:tz, year:'numeric', month:'2-digit', day:'2-digit'});
+    const parts=f.formatToParts(date);
+    const map=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+    return `${map.year}-${map.month}-${map.day}`;
+}
+function validarYMarcarRealizadaAdmin(){
+    const tz='America/El_Salvador';
+    const citaKey=dateKeyInTz(new Date(FECHA_CITA_TS_DETALLE), tz);
+    const hoyKey=dateKeyInTz(new Date(), tz);
+    if (citaKey > hoyKey){
+        alert('No se puede marcar como realizada una cita futura.');
+        return;
+    }
+    cambiarEstado('realizada');
+}
+
+// Deshabilitar visualmente el botón si FECHA > hoy (El Salvador)
+(function(){
+    const tz='America/El_Salvador';
+    const btn=document.querySelector('.marcar-realizada-detalle');
+    if (!btn) return;
+    const citaKey=dateKeyInTz(new Date(FECHA_CITA_TS_DETALLE), tz);
+    const hoyKey=dateKeyInTz(new Date(), tz);
+    if (citaKey > hoyKey){
+        btn.setAttribute('disabled','disabled');
+        btn.title = 'No disponible para fechas futuras';
+    }
+})();
 async function cargarHorasReasignacionDetalle() {
     const selPs = document.getElementById('selectPsicologoReasignarDetalle');
     const selHora = document.getElementById('selectHoraReasignarDetalle');

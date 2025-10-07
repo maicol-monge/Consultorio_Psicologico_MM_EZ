@@ -223,8 +223,9 @@
                                                     <ul class="dropdown-menu">
                                                         <c:if test="${cita.estadoCita != 'realizada' && cita.estadoCita != 'cancelada'}">
                                                             <li>
-                                                                <button class="dropdown-item text-success" 
-                                                                        onclick="cambiarEstado(${cita.id}, 'realizada')">
+                                                                <button class="dropdown-item text-success marcar-realizada-admin" 
+                                                                        data-id="${cita.id}" data-ts="${cita.fechaHora.time}" title="Marcar Realizada"
+                                                                        onclick="validarYMarcarRealizada(${cita.id}, ${cita.fechaHora.time})">
                                                                     <i class="bi bi-check-circle-fill me-2"></i>Marcar Realizada
                                                                 </button>
                                                             </li>
@@ -368,6 +369,40 @@ function cambiarEstado(idCita, nuevoEstado) {
         form.submit();
     }
 }
+
+// Validación: solo permitir marcar como realizada si la fecha/hora de la cita es hoy o pasada (zona America/El_Salvador)
+function dateKeyInTz(date, tz){
+    const f=new Intl.DateTimeFormat('en-CA',{timeZone:tz, year:'numeric', month:'2-digit', day:'2-digit'});
+    const parts=f.formatToParts(date);
+    const map=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+    return `${map.year}-${map.month}-${map.day}`;
+}
+function validarYMarcarRealizada(idCita, ts){
+    const tz='America/El_Salvador';
+    const citaKey=dateKeyInTz(new Date(parseInt(ts,10)), tz);
+    const hoyKey=dateKeyInTz(new Date(), tz);
+    if (citaKey > hoyKey){
+        alert('No se puede marcar como realizada una cita futura.');
+        return;
+    }
+    if (confirm('¿Marcar como realizada?')){
+        cambiarEstado(idCita, 'realizada');
+    }
+}
+
+// Deshabilitar visualmente en la lista cuando FECHA > hoy (El Salvador)
+(function(){
+    const tz='America/El_Salvador';
+    document.querySelectorAll('.marcar-realizada-admin[data-ts]').forEach(btn=>{
+        const ts=btn.getAttribute('data-ts');
+        const citaKey=dateKeyInTz(new Date(parseInt(ts,10)), tz);
+        const hoyKey=dateKeyInTz(new Date(), tz);
+        if (citaKey > hoyKey){
+            btn.setAttribute('disabled','disabled');
+            btn.title = 'No disponible para fechas futuras';
+        }
+    });
+})();
 
 function mostrarReasignar(idCita, fechaIso) {
     document.getElementById('citaIdReasignar').value = idCita;

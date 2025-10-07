@@ -74,6 +74,26 @@ public class CitaDAO {
         return map;
     }
 
+    public int contarPorPsicologo(int idPsicologo) {
+        String sql = "SELECT COUNT(*) FROM Cita WHERE id_psicologo=?";
+        try (Connection c = cn.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, idPsicologo);
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) return rs.getInt(1); }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0;
+    }
+
+    public int contarPacientesAtendidosPorPsicologoEnRango(int idPsicologo, java.util.Date inicio, java.util.Date fin) {
+        String sql = "SELECT COUNT(DISTINCT id_paciente) FROM Cita WHERE id_psicologo=? AND estado_cita='realizada' AND fecha_hora BETWEEN ? AND ?";
+        try (Connection c = cn.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, idPsicologo);
+            ps.setTimestamp(2, new Timestamp(inicio.getTime()));
+            ps.setTimestamp(3, new Timestamp(fin.getTime()));
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) return rs.getInt(1); }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0;
+    }
+
     public Map<String,Integer> pacientesAtendidosPorPsicologo() {
         String sql = "SELECT id_psicologo, COUNT(DISTINCT id_paciente) total FROM Cita WHERE estado_cita='realizada' GROUP BY id_psicologo";
         Map<String,Integer> map = new LinkedHashMap<>();
@@ -120,6 +140,43 @@ public class CitaDAO {
                     ci.setEstado(rs.getString("estado"));
                     try { ci.setPacienteNombre(rs.getString("paciente_nombre")); } catch (SQLException ignore) {}
                     try { ci.setPsicologoNombre(rs.getString("psicologo_nombre")); } catch (SQLException ignore) {}
+                    list.add(ci);
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return list;
+    }
+
+    public List<Cita> listarPorPacienteConNombres(int idPaciente) {
+    String sql = "SELECT c.*, p.nombre AS paciente_nombre, u.nombre AS psicologo_nombre, " +
+        "pg.monto_total AS pago_monto_total, pg.estado_pago AS pago_estado, ev.estado_emocional AS eval_estado_emocional, ev.comentarios AS eval_comentarios " +
+                "FROM Cita c " +
+                "LEFT JOIN Paciente p ON p.id=c.id_paciente " +
+                "LEFT JOIN Psicologo ps ON ps.id=c.id_psicologo " +
+                "LEFT JOIN Usuario u ON u.id=ps.id_usuario " +
+                "LEFT JOIN Pago pg ON pg.id_cita=c.id AND pg.estado='activo' " +
+                "LEFT JOIN Evaluacion ev ON ev.id_cita=c.id AND ev.estado='activo' " +
+                "WHERE c.id_paciente = ? ORDER BY c.fecha_hora DESC";
+        List<Cita> list = new ArrayList<>();
+        try (Connection c = cn.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, idPaciente);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Cita ci = new Cita();
+                    ci.setId(rs.getInt("id"));
+                    ci.setIdPaciente(rs.getInt("id_paciente"));
+                    ci.setIdPsicologo(rs.getInt("id_psicologo"));
+                    ci.setFechaHora(rs.getTimestamp("fecha_hora"));
+                    ci.setEstadoCita(rs.getString("estado_cita"));
+                    ci.setMotivoConsulta(rs.getString("motivo_consulta"));
+                    ci.setQrCode(rs.getString("qr_code"));
+                    ci.setEstado(rs.getString("estado"));
+                    try { ci.setPacienteNombre(rs.getString("paciente_nombre")); } catch (SQLException ignore) {}
+                    try { ci.setPsicologoNombre(rs.getString("psicologo_nombre")); } catch (SQLException ignore) {}
+                    try { ci.setPagoMontoTotal(rs.getBigDecimal("pago_monto_total")); } catch (SQLException ignore) {}
+                    try { ci.setPagoEstado(rs.getString("pago_estado")); } catch (SQLException ignore) {}
+                    try { ci.setEstadoEmocional((Integer) rs.getObject("eval_estado_emocional")); } catch (SQLException ignore) {}
+                    try { ci.setEvaluacionComentarios(rs.getString("eval_comentarios")); } catch (SQLException ignore) {}
                     list.add(ci);
                 }
             }

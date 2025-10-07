@@ -18,4 +18,36 @@ public class EvaluacionDAO {
         } catch (SQLException e) { e.printStackTrace(); }
         return new ResumenEval(0, 0);
     }
+
+    public java.util.List<Modelos.Evaluacion> listarPorCita(int idCita) {
+        java.util.List<Modelos.Evaluacion> list = new java.util.ArrayList<>();
+        String sql = "SELECT * FROM Evaluacion WHERE id_cita=? AND estado<>'inactivo' ORDER BY id DESC";
+        try (Connection c = cn.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, idCita);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Modelos.Evaluacion e = new Modelos.Evaluacion();
+                    e.setId(rs.getInt("id"));
+                    e.setIdCita(rs.getInt("id_cita"));
+                    e.setEstadoEmocional(rs.getInt("estado_emocional"));
+                    e.setComentarios(rs.getString("comentarios"));
+                    e.setEstado(rs.getString("estado"));
+                    list.add(e);
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return list;
+    }
+
+    public boolean crear(Modelos.Evaluacion eval) {
+        String ins = "INSERT INTO Evaluacion (id_cita, estado_emocional, comentarios, estado) VALUES (?,?,?,?)";
+        try (Connection c = cn.getConnection(); PreparedStatement ps = c.prepareStatement(ins)) {
+            ps.setInt(1, eval.getIdCita());
+            ps.setInt(2, eval.getEstadoEmocional());
+            ps.setString(3, eval.getComentarios());
+            ps.setString(4, eval.getEstado() == null ? "activo" : eval.getEstado());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); }
+        return false;
+    }
 }

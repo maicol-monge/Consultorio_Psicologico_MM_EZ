@@ -17,9 +17,12 @@ public class Cita {
     // Campos adicionales para vistas
     private String pacienteNombre;
     private String psicologoNombre;
+    // Extras para vistas de detalle
+    private java.math.BigDecimal pagoMontoTotal;
+    private String pagoEstado;
+    private Integer estadoEmocional;
+    private String evaluacionComentarios;
     
-    // Alias para compatibilidad
-    private String motivo;
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -47,6 +50,14 @@ public class Cita {
     public void setPacienteNombre(String pacienteNombre) { this.pacienteNombre = pacienteNombre; }
     public String getPsicologoNombre() { return psicologoNombre; }
     public void setPsicologoNombre(String psicologoNombre) { this.psicologoNombre = psicologoNombre; }
+    public java.math.BigDecimal getPagoMontoTotal() { return pagoMontoTotal; }
+    public void setPagoMontoTotal(java.math.BigDecimal pagoMontoTotal) { this.pagoMontoTotal = pagoMontoTotal; }
+    public String getPagoEstado() { return pagoEstado; }
+    public void setPagoEstado(String pagoEstado) { this.pagoEstado = pagoEstado; }
+    public Integer getEstadoEmocional() { return estadoEmocional; }
+    public void setEstadoEmocional(Integer estadoEmocional) { this.estadoEmocional = estadoEmocional; }
+    public String getEvaluacionComentarios() { return evaluacionComentarios; }
+    public void setEvaluacionComentarios(String evaluacionComentarios) { this.evaluacionComentarios = evaluacionComentarios; }
     
     // Métodos alias para compatibilidad
     public String getMotivo() { return motivoConsulta; }

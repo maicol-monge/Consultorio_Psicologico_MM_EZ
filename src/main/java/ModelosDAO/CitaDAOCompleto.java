@@ -233,8 +233,8 @@ public class CitaDAOCompleto {
             return false;
         }
 
-        // 2) No debe existir otra cita ocupando ese cupo exacto (misma fecha_hora)
-        String sql = "SELECT COUNT(*) FROM Cita WHERE id_psicologo = ? AND fecha_hora = ? AND estado_cita != 'cancelada'";
+    // 2) No debe existir otra cita PENDIENTE ocupando ese cupo exacto (misma fecha_hora)
+    String sql = "SELECT COUNT(*) FROM Cita WHERE id_psicologo = ? AND fecha_hora = ? AND LOWER(estado_cita) = 'pendiente'";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, idPsicologo);
             stmt.setTimestamp(2, new Timestamp(fechaHora.getTime()));
@@ -248,7 +248,7 @@ public class CitaDAOCompleto {
         return false;
     }
 
-    // Horas ocupadas (confirmadas) para un psicólogo en una fecha (formato "HH:mm")
+    // Horas ocupadas (solo PENDIENTES) para un psicólogo en una fecha (formato "HH:mm")
     public Set<String> obtenerHorasOcupadasConfirmadas(int idPsicologo, java.util.Date fecha) {
         Set<String> horas = new HashSet<>();
         Calendar cal = Calendar.getInstance();
@@ -261,8 +261,8 @@ public class CitaDAOCompleto {
         cal.add(Calendar.DAY_OF_MONTH, 1);
         Timestamp fin = new Timestamp(cal.getTimeInMillis());
 
-    // Considerar como ocupadas todas las citas no canceladas (incluye 'pendiente' y 'confirmada')
-    String sql = "SELECT TIME(fecha_hora) as h FROM Cita WHERE id_psicologo=? AND fecha_hora>=? AND fecha_hora<? AND estado_cita <> 'cancelada'";
+    // Considerar como ocupadas SOLO las citas 'pendiente'
+    String sql = "SELECT TIME(fecha_hora) as h FROM Cita WHERE id_psicologo=? AND fecha_hora>=? AND fecha_hora<? AND LOWER(estado_cita) = 'pendiente'";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, idPsicologo);
             ps.setTimestamp(2, inicio);

@@ -24,7 +24,7 @@
                         <input type="hidden" name="action" value="login" />
                         <div class="mb-3">
                             <label class="form-label"><i class="bi bi-envelope me-2"></i>Email</label>
-                            <input type="email" name="email" class="form-control" placeholder="admin@demo.com" required>
+                            <input type="email" name="email" class="form-control" placeholder="correo" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label"><i class="bi bi-lock me-2"></i>Contraseña</label>
@@ -36,10 +36,6 @@
                     </form>
                     ${error != null ? '<div class="alert alert-danger mt-3 mb-0"><i class="bi bi-exclamation-triangle me-2"></i>' + error + '</div>' : ''}
                     <div class="mt-4 pt-3 border-top text-center">
-                        <small class="text-muted">
-                            <strong>Demo:</strong> admin@demo.com / admin123<br>
-                            <strong>Psicólogo:</strong> ana@demo.com / psico123
-                        </small>
                     </div>
                 </div>
             </div>

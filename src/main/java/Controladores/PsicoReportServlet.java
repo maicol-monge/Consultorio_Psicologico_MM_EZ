@@ -21,9 +21,12 @@ import java.util.Map;
 import java.util.Optional;
 
 @WebServlet(name = "PsicoReportServlet", urlPatterns = {
-        "/psico/report/sesionesPorRango",
-        "/psico/report/citasPorMes",
-        "/psico/report/resumenEvaluaciones"
+    "/psico/reportes",
+    "/psico/report/sesionesPorRango",
+    "/psico/report/citasPorMes",
+    "/psico/report/resumenEvaluaciones",
+    "/psico/report/pacientesAtendidos",
+    "/psico/report/citasPorEstado"
 })
 public class PsicoReportServlet extends HttpServlet {
     private final CitaDAO citaDAO = new CitaDAO();
@@ -37,6 +40,10 @@ public class PsicoReportServlet extends HttpServlet {
         int idPsicologo = Optional.ofNullable(psicologoDAO.obtenerPorUsuarioId(u.getId())).map(p->p.getId()).orElse(0);
         String format = Optional.ofNullable(req.getParameter("format")).orElse("pdf");
         String path = req.getServletPath();
+        if (path.endsWith("/reportes")) {
+            req.getRequestDispatcher("/WEB-INF/views/psico/reportes/index.jsp").forward(req, resp);
+            return;
+        }
         if (path.endsWith("sesionesPorRango")) {
             java.util.Date[] r = ReportUtils.rango(req, 30);
             int realizadas = citaDAO.contarPorEstadoYPsicologo("realizada", idPsicologo);
@@ -64,6 +71,30 @@ public class PsicoReportServlet extends HttpServlet {
             List<String[]> rows = new java.util.ArrayList<>();
             rows.add(new String[]{String.valueOf(re.cantidad), String.format(Locale.US, "%.2f", re.promedio)});
             String titulo = "Resumen de evaluaciones";
+            if ("xlsx".equalsIgnoreCase(format)) { excel(resp, titulo, headers, rows); return; }
+            pdf(resp, titulo, headers, rows); return;
+        }
+        if (path.endsWith("pacientesAtendidos")) {
+            java.util.Date[] r = ReportUtils.rango(req, 30);
+            String[] headers = {"Rango","Pacientes atendidos"};
+            List<String[]> rows = new ArrayList<>();
+            int cnt = citaDAO.contarPacientesAtendidosPorPsicologoEnRango(idPsicologo, r[0], r[1]);
+            rows.add(new String[]{new java.text.SimpleDateFormat("yyyy-MM-dd").format(r[0]) + " a " + new java.text.SimpleDateFormat("yyyy-MM-dd").format(r[1]), String.valueOf(cnt)});
+            String titulo = "Pacientes atendidos (personal)";
+            if ("xlsx".equalsIgnoreCase(format)) { excel(resp, titulo, headers, rows); return; }
+            pdf(resp, titulo, headers, rows); return;
+        }
+        if (path.endsWith("citasPorEstado")) {
+            String est = Optional.ofNullable(req.getParameter("estado")).orElse("");
+            String[] headers = {"Estado","Cantidad"};
+            int c = (est.isEmpty()) ? citaDAO.contarPorPsicologo(idPsicologo) : citaDAO.contarPorEstadoYPsicologo(est, idPsicologo);
+            List<String[]> rows = new ArrayList<>();
+            if (est.isEmpty()) {
+                rows.add(new String[]{"Total", String.valueOf(c)});
+            } else {
+                rows.add(new String[]{est, String.valueOf(c)});
+            }
+            String titulo = "Citas por estado";
             if ("xlsx".equalsIgnoreCase(format)) { excel(resp, titulo, headers, rows); return; }
             pdf(resp, titulo, headers, rows); return;
         }

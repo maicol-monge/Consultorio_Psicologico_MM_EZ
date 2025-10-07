@@ -138,4 +138,66 @@ public class PacienteDAO {
         } catch (SQLException e) { e.printStackTrace(); }
         return 0;
     }
+
+    // Lista pacientes que tienen al menos una cita con el psicólogo indicado
+    public List<Paciente> listarPorPsicologo(int idPsicologo) {
+        String sql = "SELECT DISTINCT p.* FROM Paciente p " +
+                "INNER JOIN Cita c ON c.id_paciente = p.id " +
+                "WHERE c.id_psicologo = ? ORDER BY p.nombre";
+        List<Paciente> lista = new ArrayList<>();
+        try (Connection c = cn.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, idPsicologo);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Paciente p = new Paciente();
+                    p.setId(rs.getInt("id"));
+                    p.setNombre(rs.getString("nombre"));
+                    p.setEmail(rs.getString("email"));
+                    p.setTelefono(rs.getString("telefono"));
+                    p.setDireccion(rs.getString("direccion"));
+                    p.setEstado(rs.getString("estado"));
+                    p.setDui(rs.getString("dui"));
+                    p.setCodigoAcceso(rs.getString("codigo_acceso"));
+                    p.setFechaNacimiento(rs.getDate("fecha_nacimiento"));
+                    p.setGenero(rs.getString("genero"));
+                    p.setHistorialClinico(rs.getString("historial_clinico"));
+                    lista.add(p);
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return lista;
+    }
+
+    public List<Paciente> buscarPorPsicologo(String termino, int idPsicologo) {
+        String sql = "SELECT DISTINCT p.* FROM Paciente p " +
+                "INNER JOIN Cita c ON c.id_paciente = p.id " +
+                "WHERE c.id_psicologo = ? AND (p.nombre LIKE ? OR p.email LIKE ? OR p.dui LIKE ?) " +
+                "ORDER BY p.nombre";
+        List<Paciente> lista = new ArrayList<>();
+        try (Connection c = cn.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, idPsicologo);
+            String busqueda = "%" + termino + "%";
+            ps.setString(2, busqueda);
+            ps.setString(3, busqueda);
+            ps.setString(4, busqueda);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Paciente p = new Paciente();
+                    p.setId(rs.getInt("id"));
+                    p.setNombre(rs.getString("nombre"));
+                    p.setEmail(rs.getString("email"));
+                    p.setTelefono(rs.getString("telefono"));
+                    p.setDireccion(rs.getString("direccion"));
+                    p.setEstado(rs.getString("estado"));
+                    p.setDui(rs.getString("dui"));
+                    p.setCodigoAcceso(rs.getString("codigo_acceso"));
+                    p.setFechaNacimiento(rs.getDate("fecha_nacimiento"));
+                    p.setGenero(rs.getString("genero"));
+                    p.setHistorialClinico(rs.getString("historial_clinico"));
+                    lista.add(p);
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return lista;
+    }
 }

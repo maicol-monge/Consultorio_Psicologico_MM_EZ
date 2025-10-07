@@ -153,7 +153,12 @@ public class AdminCitasServlet extends HttpServlet {
     private void mostrarFormularioEditar(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         try {
-            String idStr = request.getPathInfo().substring("/editar/".length());
+            String pi = request.getPathInfo();
+            if (pi == null || !pi.startsWith("/editar/") || pi.length() <= "/editar/".length()) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Parámetro de edición inválido");
+                return;
+            }
+            String idStr = pi.substring("/editar/".length());
             int id = Integer.parseInt(idStr);
             
             Cita cita = citaDAO.buscarPorId(id);
@@ -467,6 +472,26 @@ public class AdminCitasServlet extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             String estado = request.getParameter("estado");
+            try {
+                if ("realizada".equalsIgnoreCase(estado)) {
+                    ModelosDAO.CitaDAOCompleto cdao = this.citaDAO; // reuse
+                    Modelos.Cita c = cdao.buscarPorId(id);
+                    if (c != null) {
+                        java.util.TimeZone tz = java.util.TimeZone.getTimeZone("America/El_Salvador");
+                        java.util.Calendar hoy = java.util.Calendar.getInstance(tz);
+                        int y=hoy.get(java.util.Calendar.YEAR), m=hoy.get(java.util.Calendar.MONTH)+1, d=hoy.get(java.util.Calendar.DAY_OF_MONTH);
+                        int hoyKey = y*10000 + m*100 + d;
+                        java.util.Calendar cc = java.util.Calendar.getInstance(tz);
+                        cc.setTime(c.getFechaHora());
+                        int cy=cc.get(java.util.Calendar.YEAR), cm=cc.get(java.util.Calendar.MONTH)+1, cd=cc.get(java.util.Calendar.DAY_OF_MONTH);
+                        int citaKey = cy*10000 + cm*100 + cd;
+                        if (citaKey > hoyKey) {
+                            response.sendRedirect(request.getContextPath()+"/admin/citas?error=No se puede marcar como realizada una cita futura");
+                            return;
+                        }
+                    }
+                }
+            } catch (Exception ignore) {}
             
             boolean success = citaDAO.cambiarEstado(id, estado);
             String mensaje = success ? "Estado de la cita cambiado correctamente" : "Error al cambiar estado";

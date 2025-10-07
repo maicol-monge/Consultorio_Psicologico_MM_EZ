@@ -11,11 +11,16 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/consultorio.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+      /* Sidebar scroll behavior */
+      #sidebar { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+      #sidebar .sidebar-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+    </style>
 </head>
 <body>
 <!-- Sidebar -->
 <div class="sidebar" id="sidebar">
-    <div class="p-3">
+    <div class="p-3 sidebar-body">
         <div class="d-flex align-items-center mb-4">
             <i class="bi bi-heart-pulse-fill fs-2 me-3"></i>
             <div class="sidebar-text">
@@ -23,106 +28,48 @@
                 <small class="text-white-50">Psicológico</small>
             </div>
         </div>
-        
-        <c:choose>
-            <c:when test="${sessionScope.user != null && sessionScope.user.rol == 'admin'}">
-                <!-- Menú Admin -->
-                <nav class="nav flex-column">
-                    <a class="nav-link ${param.activeMenu == 'dashboard' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/dashboard">
-                        <i class="bi bi-speedometer2 me-2"></i><span class="sidebar-text">Dashboard</span>
-                    </a>
-                    
-                    <div class="nav-item">
-                        <span class="nav-link text-white-50 fw-bold small">
-                            <i class="bi bi-people me-2"></i><span class="sidebar-text">USUARIOS</span>
-                        </span>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'usuarios' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/usuarios">
-                            <i class="bi bi-person-gear me-2"></i><span class="sidebar-text">Gestionar Usuarios</span>
-                        </a>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'pacientes' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/pacientes">
-                            <i class="bi bi-person-heart me-2"></i><span class="sidebar-text">Pacientes</span>
-                        </a>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'citas' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/citas">
-                            <i class="bi bi-calendar-check me-2"></i><span class="sidebar-text">Citas</span>
-                        </a>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'psicologos' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/psicologos">
-                            <i class="bi bi-person-badge me-2"></i><span class="sidebar-text">Psicólogos</span>
-                        </a>
-                    </div>
-                    
-                    <div class="nav-item">
-                        <span class="nav-link text-white-50 fw-bold small">
-                            <i class="bi bi-calendar-check me-2"></i><span class="sidebar-text">CITAS</span>
-                        </span>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'citas' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/citas">
-                            <i class="bi bi-calendar3 me-2"></i><span class="sidebar-text">Gestionar Citas</span>
-                        </a>
-                    </div>
-                    
-                    <div class="nav-item">
-                        <span class="nav-link text-white-50 fw-bold small">
-                            <i class="bi bi-credit-card me-2"></i><span class="sidebar-text">PAGOS</span>
-                        </span>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'pagos' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/pagos">
-                            <i class="bi bi-cash-stack me-2"></i><span class="sidebar-text">Gestionar Pagos</span>
-                        </a>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'tickets' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/tickets">
-                            <i class="bi bi-receipt me-2"></i><span class="sidebar-text">Tickets</span>
-                        </a>
-                    </div>
-                    
-                    <div class="nav-item">
-                        <span class="nav-link text-white-50 fw-bold small">
-                            <i class="bi bi-graph-up me-2"></i><span class="sidebar-text">REPORTES</span>
-                        </span>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'reportes' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/reportes">
-                            <i class="bi bi-file-earmark-bar-graph me-2"></i><span class="sidebar-text">Reportes</span>
-                        </a>
-                    </div>
-                </nav>
-            </c:when>
-            <c:otherwise>
-                <!-- Menú Psicólogo -->
-                <nav class="nav flex-column">
-                    <a class="nav-link ${param.activeMenu == 'dashboard' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/dashboard">
-                        <i class="bi bi-speedometer2 me-2"></i><span class="sidebar-text">Dashboard</span>
-                    </a>
-                    
-                    <div class="nav-item">
-                        <span class="nav-link text-white-50 fw-bold small">
-                            <i class="bi bi-calendar-check me-2"></i><span class="sidebar-text">AGENDA</span>
-                        </span>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'agenda' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/agenda">
-                            <i class="bi bi-calendar3 me-2"></i><span class="sidebar-text">Mi Agenda</span>
-                        </a>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'pacientes' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/pacientes">
-                            <i class="bi bi-person-heart me-2"></i><span class="sidebar-text">Mis Pacientes</span>
-                        </a>
-                    </div>
-                    
-                    <div class="nav-item">
-                        <span class="nav-link text-white-50 fw-bold small">
-                            <i class="bi bi-clipboard-data me-2"></i><span class="sidebar-text">SESIONES</span>
-                        </span>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'sesiones' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/sesiones">
-                            <i class="bi bi-chat-left-text me-2"></i><span class="sidebar-text">Registrar Sesión</span>
-                        </a>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'evaluaciones' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/evaluaciones">
-                            <i class="bi bi-clipboard-heart me-2"></i><span class="sidebar-text">Evaluaciones</span>
-                        </a>
-                    </div>
-                    
-                    <div class="nav-item">
-                        <span class="nav-link text-white-50 fw-bold small">
-                            <i class="bi bi-graph-up me-2"></i><span class="sidebar-text">REPORTES</span>
-                        </span>
-                        <a class="nav-link ms-3 ${param.activeMenu == 'reportes' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/reportes">
-                            <i class="bi bi-file-earmark-bar-graph me-2"></i><span class="sidebar-text">Mis Reportes</span>
-                        </a>
-                    </div>
-                </nav>
-            </c:otherwise>
-        </c:choose>
+
+        <!-- Menú Psicólogo -->
+        <nav class="nav flex-column">
+            <a class="nav-link ${param.activeMenu == 'dashboard' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/dashboard">
+                <i class="bi bi-speedometer2 me-2"></i><span class="sidebar-text">Dashboard</span>
+            </a>
+
+            <div class="nav-item">
+                <span class="nav-link text-white-50 fw-bold small">
+                    <i class="bi bi-calendar-check me-2"></i><span class="sidebar-text">AGENDA</span>
+                </span>
+                <a class="nav-link ms-3 ${param.activeMenu == 'agenda' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/agenda">
+                    <i class="bi bi-calendar3 me-2"></i><span class="sidebar-text">Mi Agenda</span>
+                </a>
+                <a class="nav-link ms-3 ${param.activeMenu == 'pacientes' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/pacientes">
+                    <i class="bi bi-person-heart me-2"></i><span class="sidebar-text">Pacientes</span>
+                </a>
+                <a class="nav-link ms-3 ${param.activeMenu == 'calendario' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/agenda/calendario">
+                    <i class="bi bi-calendar3-week me-2"></i><span class="sidebar-text">Calendario</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <span class="nav-link text-white-50 fw-bold small">
+                    <i class="bi bi-credit-card me-2"></i><span class="sidebar-text">PAGOS</span>
+                </span>
+                <a class="nav-link ms-3 ${param.activeMenu == 'pagos' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/pagos">
+                    <i class="bi bi-cash-stack me-2"></i><span class="sidebar-text">Mis Pagos</span>
+                </a>
+            </div>
+
+            <!-- Se elimina la entrada de Evaluaciones en el menú según solicitud -->
+
+            <div class="nav-item">
+                <span class="nav-link text-white-50 fw-bold small">
+                    <i class="bi bi-graph-up me-2"></i><span class="sidebar-text">REPORTES</span>
+                </span>
+                <a class="nav-link ms-3 ${param.activeMenu == 'reportes' ? 'active' : ''}" href="${pageContext.request.contextPath}/psico/reportes">
+                    <i class="bi bi-file-earmark-bar-graph me-2"></i><span class="sidebar-text">Mis Reportes</span>
+                </a>
+            </div>
+        </nav>
     </div>
     
     <!-- User info y logout -->
