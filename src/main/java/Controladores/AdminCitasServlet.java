@@ -91,6 +91,15 @@ public class AdminCitasServlet extends HttpServlet {
             String estado = request.getParameter("estado");
             String pacienteId = request.getParameter("paciente");
             String psicologoId = request.getParameter("psicologo");
+            // Mapear mensajes de query params a atributos de request para alertas dinámicas
+            String successMsg = request.getParameter("success");
+            String errorMsg = request.getParameter("error");
+            if (successMsg != null && !successMsg.isEmpty()) {
+                request.setAttribute("success", successMsg);
+            }
+            if (errorMsg != null && !errorMsg.isEmpty()) {
+                request.setAttribute("error", errorMsg);
+            }
             
             List<Cita> citas = citaDAO.buscarConFiltros(fechaInicio, fechaFin, estado, 
                 pacienteId != null && !pacienteId.isEmpty() ? Integer.parseInt(pacienteId) : null,
@@ -173,6 +182,15 @@ public class AdminCitasServlet extends HttpServlet {
             Paciente paciente = pacienteDAO.obtenerPorId(cita.getIdPaciente());
             Psicologo psicologo = psicologoDAO.obtenerPorId(cita.getIdPsicologo());
             List<Psicologo> psicologos = psicologoDAO.listarTodos(); // Para reasignación
+            // Mapear mensajes de query params a atributos de request para alertas dinámicas
+            String successMsg = request.getParameter("success");
+            String errorMsg = request.getParameter("error");
+            if (successMsg != null && !successMsg.isEmpty()) {
+                request.setAttribute("success", successMsg);
+            }
+            if (errorMsg != null && !errorMsg.isEmpty()) {
+                request.setAttribute("error", errorMsg);
+            }
             
             request.setAttribute("cita", cita);
             request.setAttribute("paciente", paciente);
@@ -193,6 +211,15 @@ public class AdminCitasServlet extends HttpServlet {
             List<Cita> citas = citaDAO.listarTodos();
             List<Psicologo> psicologos = psicologoDAO.listarTodos();
             List<Paciente> pacientes = pacienteDAO.listarTodos();
+            // Mapear mensajes de query params a atributos de request para alertas dinámicas
+            String successMsg = request.getParameter("success");
+            String errorMsg = request.getParameter("error");
+            if (successMsg != null && !successMsg.isEmpty()) {
+                request.setAttribute("success", successMsg);
+            }
+            if (errorMsg != null && !errorMsg.isEmpty()) {
+                request.setAttribute("error", errorMsg);
+            }
             
             request.setAttribute("citas", citas);
             request.setAttribute("psicologos", psicologos);

@@ -20,11 +20,20 @@ public class AdminUsuariosServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
         String path = req.getServletPath();
         
         if ("/admin/usuarios".equals(path)) {
-            List<Usuario> usuarios = usuarioDAO.listarTodos();
+            String q = req.getParameter("q");
+            String rol = req.getParameter("rol");
+            String estado = req.getParameter("estado");
+            List<Usuario> usuarios = (q != null || (rol != null && !rol.isEmpty()) || (estado != null && !estado.isEmpty()))
+                    ? usuarioDAO.buscar(q, rol, estado)
+                    : usuarioDAO.listarTodos();
             req.setAttribute("usuarios", usuarios);
+            req.setAttribute("q", q);
+            req.setAttribute("rol", rol);
+            req.setAttribute("estado", estado);
             req.getRequestDispatcher("/WEB-INF/views/admin/usuarios/listar.jsp").forward(req, resp);
             return;
         }
@@ -42,6 +51,13 @@ public class AdminUsuariosServlet extends HttpServlet {
                 return;
             }
             req.setAttribute("usuario", usuario);
+            // Cargar datos de Psicólogo si aplica
+            if ("psicologo".equalsIgnoreCase(usuario.getRol())) {
+                Psicologo p = psicologoDAO.obtenerPorUsuarioId(usuario.getId());
+                if (p != null) {
+                    req.setAttribute("psicologo", p);
+                }
+            }
             req.getRequestDispatcher("/WEB-INF/views/admin/usuarios/form.jsp").forward(req, resp);
             return;
         }
@@ -51,6 +67,7 @@ public class AdminUsuariosServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
         String path = req.getServletPath();
         
         if ("/admin/usuarios/guardar".equals(path)) {
@@ -73,6 +90,28 @@ public class AdminUsuariosServlet extends HttpServlet {
                 // Actualizar
                 usuario.setId(Integer.parseInt(idStr));
                 exito = usuarioDAO.actualizar(usuario);
+                // Si es psicólogo, actualizar/insertar su información profesional
+                if (exito && "psicologo".equals(rol)) {
+                    Psicologo existente = psicologoDAO.obtenerPorUsuarioId(usuario.getId());
+                    if (existente != null) {
+                        existente.setEspecialidad(req.getParameter("especialidad"));
+                        existente.setExperiencia(req.getParameter("experiencia"));
+                        existente.setHorario(req.getParameter("horario"));
+                        // Mantener estado si ya existe
+                        if (existente.getEstado() == null || existente.getEstado().isEmpty()) {
+                            existente.setEstado("activo");
+                        }
+                        psicologoDAO.actualizar(existente);
+                    } else {
+                        Psicologo nuevo = new Psicologo();
+                        nuevo.setIdUsuario(usuario.getId());
+                        nuevo.setEspecialidad(req.getParameter("especialidad"));
+                        nuevo.setExperiencia(req.getParameter("experiencia"));
+                        nuevo.setHorario(req.getParameter("horario"));
+                        nuevo.setEstado("activo");
+                        psicologoDAO.insertar(nuevo);
+                    }
+                }
             } else {
                 // Insertar
                 exito = usuarioDAO.insertar(usuario);
@@ -89,11 +128,11 @@ public class AdminUsuariosServlet extends HttpServlet {
                 }
             }
             
-            if (exito) {
-                resp.sendRedirect(req.getContextPath() + "/admin/usuarios?success=Usuario guardado correctamente");
-            } else {
-                resp.sendRedirect(req.getContextPath() + "/admin/usuarios?error=Error al guardar usuario");
-            }
+            // Mostrar mensaje dinámico sin usar parámetros en la URL
+            List<Usuario> usuarios = usuarioDAO.listarTodos();
+            req.setAttribute("usuarios", usuarios);
+            req.setAttribute(exito ? "success" : "error", exito ? "Usuario guardado correctamente" : "Error al guardar usuario");
+            req.getRequestDispatcher("/WEB-INF/views/admin/usuarios/listar.jsp").forward(req, resp);
             return;
         }
         
@@ -102,8 +141,10 @@ public class AdminUsuariosServlet extends HttpServlet {
             String estado = req.getParameter("estado");
             
             boolean exito = usuarioDAO.cambiarEstado(id, estado);
-            String mensaje = exito ? "Estado cambiado correctamente" : "Error al cambiar estado";
-            resp.sendRedirect(req.getContextPath() + "/admin/usuarios?" + (exito ? "success" : "error") + "=" + mensaje);
+            List<Usuario> usuarios = usuarioDAO.listarTodos();
+            req.setAttribute("usuarios", usuarios);
+            req.setAttribute(exito ? "success" : "error", exito ? "Estado cambiado correctamente" : "Error al cambiar estado");
+            req.getRequestDispatcher("/WEB-INF/views/admin/usuarios/listar.jsp").forward(req, resp);
             return;
         }
         
@@ -112,8 +153,10 @@ public class AdminUsuariosServlet extends HttpServlet {
             String nuevaPassword = req.getParameter("nueva-password");
             
             boolean exito = usuarioDAO.restablecerPassword(id, nuevaPassword);
-            String mensaje = exito ? "Contraseña restablecida correctamente" : "Error al restablecer contraseña";
-            resp.sendRedirect(req.getContextPath() + "/admin/usuarios?" + (exito ? "success" : "error") + "=" + mensaje);
+            List<Usuario> usuarios = usuarioDAO.listarTodos();
+            req.setAttribute("usuarios", usuarios);
+            req.setAttribute(exito ? "success" : "error", exito ? "Contraseña restablecida correctamente" : "Error al restablecer contraseña");
+            req.getRequestDispatcher("/WEB-INF/views/admin/usuarios/listar.jsp").forward(req, resp);
             return;
         }
         

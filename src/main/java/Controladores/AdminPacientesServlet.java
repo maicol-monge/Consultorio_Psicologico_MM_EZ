@@ -13,7 +13,8 @@ import java.util.UUID;
 
 @WebServlet(name = "AdminPacientesServlet", urlPatterns = {
     "/admin/pacientes", "/admin/pacientes/nuevo", "/admin/pacientes/editar",
-    "/admin/pacientes/guardar", "/admin/pacientes/buscar"
+    "/admin/pacientes/guardar", "/admin/pacientes/buscar",
+    "/admin/pacientes/ver", "/admin/pacientes/cambiar-estado"
 })
 public class AdminPacientesServlet extends HttpServlet {
     private final PacienteDAO pacienteDAO = new PacienteDAO();
@@ -21,10 +22,12 @@ public class AdminPacientesServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
         String path = req.getServletPath();
         
         if ("/admin/pacientes".equals(path)) {
-            String busqueda = req.getParameter("q");
+            // Soportar búsqueda simple con el parámetro 'buscar'
+            String busqueda = req.getParameter("buscar");
             List<Paciente> pacientes;
             
             if (busqueda != null && !busqueda.trim().isEmpty()) {
@@ -35,12 +38,14 @@ public class AdminPacientesServlet extends HttpServlet {
             }
             
             req.setAttribute("pacientes", pacientes);
-            req.getRequestDispatcher("/WEB-INF/views/admin/pacientes/listar.jsp").forward(req, resp);
+            // Usar wrapper existente 'index.jsp' que incluye el layout y el contenido
+            req.getRequestDispatcher("/WEB-INF/views/admin/pacientes/index.jsp").forward(req, resp);
             return;
         }
         
         if ("/admin/pacientes/nuevo".equals(path)) {
-            req.getRequestDispatcher("/WEB-INF/views/admin/pacientes/form.jsp").forward(req, resp);
+            // Usar wrapper existente 'nuevo.jsp'
+            req.getRequestDispatcher("/WEB-INF/views/admin/pacientes/nuevo.jsp").forward(req, resp);
             return;
         }
         
@@ -52,18 +57,32 @@ public class AdminPacientesServlet extends HttpServlet {
                 return;
             }
             req.setAttribute("paciente", paciente);
-            req.getRequestDispatcher("/WEB-INF/views/admin/pacientes/form.jsp").forward(req, resp);
+            // Usar wrapper existente 'editar.jsp'
+            req.getRequestDispatcher("/WEB-INF/views/admin/pacientes/editar.jsp").forward(req, resp);
+            return;
+        }
+
+        if ("/admin/pacientes/ver".equals(path)) {
+            int id = Integer.parseInt(req.getParameter("id"));
+            Paciente paciente = pacienteDAO.obtenerPorId(id);
+            if (paciente == null) {
+                resp.sendRedirect(req.getContextPath() + "/admin/pacientes?error=Paciente no encontrado");
+                return;
+            }
+            req.setAttribute("paciente", paciente);
+            req.getRequestDispatcher("/WEB-INF/views/admin/pacientes/ver.jsp").forward(req, resp);
             return;
         }
         
-        resp.sendError(404);
+    resp.sendError(404);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
         String path = req.getServletPath();
         
-        if ("/admin/pacientes/guardar".equals(path)) {
+    if ("/admin/pacientes/guardar".equals(path)) {
             String idStr = req.getParameter("id");
             String nombre = req.getParameter("nombre");
             String email = req.getParameter("email");
@@ -90,7 +109,10 @@ public class AdminPacientesServlet extends HttpServlet {
                     paciente.setFechaNacimiento(sdf.parse(fechaNacStr));
                 }
             } catch (ParseException e) {
-                resp.sendRedirect(req.getContextPath() + "/admin/pacientes?error=Fecha de nacimiento inválida");
+                req.setAttribute("error", "Fecha de nacimiento inválida");
+                List<Paciente> pacientes = pacienteDAO.listarTodos();
+                req.setAttribute("pacientes", pacientes);
+                req.getRequestDispatcher("/WEB-INF/views/admin/pacientes/index.jsp").forward(req, resp);
                 return;
             }
             
@@ -105,11 +127,29 @@ public class AdminPacientesServlet extends HttpServlet {
                 exito = pacienteDAO.insertar(paciente);
             }
             
-            if (exito) {
-                resp.sendRedirect(req.getContextPath() + "/admin/pacientes?success=Paciente guardado correctamente");
-            } else {
-                resp.sendRedirect(req.getContextPath() + "/admin/pacientes?error=Error al guardar paciente");
+            List<Paciente> pacientes = pacienteDAO.listarTodos();
+            req.setAttribute("pacientes", pacientes);
+            req.setAttribute(exito ? "success" : "error", exito ? "Paciente guardado correctamente" : "Error al guardar paciente");
+            req.getRequestDispatcher("/WEB-INF/views/admin/pacientes/index.jsp").forward(req, resp);
+            return;
+        }
+
+        if ("/admin/pacientes/cambiar-estado".equals(path)) {
+            String idStr = req.getParameter("id");
+            String nuevoEstado = req.getParameter("estado");
+            boolean exito = false;
+            if (idStr != null) {
+                int id = Integer.parseInt(idStr);
+                Paciente p = pacienteDAO.obtenerPorId(id);
+                if (p != null) {
+                    p.setEstado(nuevoEstado);
+                    exito = pacienteDAO.actualizar(p);
+                }
             }
+            List<Paciente> pacientes = pacienteDAO.listarTodos();
+            req.setAttribute("pacientes", pacientes);
+            req.setAttribute(exito ? "success" : "error", exito ? "Estado actualizado" : "No se pudo actualizar el estado");
+            req.getRequestDispatcher("/WEB-INF/views/admin/pacientes/index.jsp").forward(req, resp);
             return;
         }
         

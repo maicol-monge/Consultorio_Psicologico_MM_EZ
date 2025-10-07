@@ -1,3 +1,5 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!-- Contenido listado de usuarios -->
 <div class="fade-in-up">
     <!-- Header -->
@@ -16,19 +18,52 @@
         </a>
     </div>
 
-    <!-- Alertas -->
-    <c:if test="${param.success != null}">
+    <!-- Alertas dinámicas (usando atributos de request) -->
+    <c:if test="${not empty requestScope.success}">
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>${param.success}
+            <i class="bi bi-check-circle me-2"></i>${requestScope.success}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
-    <c:if test="${param.error != null}">
+    <c:if test="${not empty requestScope.error}">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>${param.error}
+            <i class="bi bi-exclamation-triangle me-2"></i>${requestScope.error}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
+
+    <!-- Filtros de búsqueda -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" action="${pageContext.request.contextPath}/admin/usuarios" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-search me-2"></i>Buscar</label>
+                    <input type="text" name="q" class="form-control" value="${q}" placeholder="Nombre o email">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label"><i class="bi bi-shield-check me-2"></i>Rol</label>
+                    <select name="rol" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="admin" ${rol == 'admin' ? 'selected' : ''}>Administrador</option>
+                        <option value="psicologo" ${rol == 'psicologo' ? 'selected' : ''}>Psicólogo</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label"><i class="bi bi-toggle-on me-2"></i>Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="activo" ${estado == 'activo' ? 'selected' : ''}>Activo</option>
+                        <option value="inactivo" ${estado == 'inactivo' ? 'selected' : ''}>Inactivo</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="d-grid w-100">
+                        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-filter me-2"></i>Filtrar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Tabla de usuarios -->
     <div class="card">

@@ -1,3 +1,4 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!-- Gestión de Citas -->
 <div class="fade-in-up">
     <!-- Header -->
@@ -52,29 +53,30 @@
                         <option value="cancelada" ${param.estado == 'cancelada' ? 'selected' : ''}>Cancelada</option>
                     </select>
                 </div>
+                <div class="w-100"></div>
+                <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-search me-2"></i>Buscar Paciente</label>
+                    <input type="text" id="buscarPaciente" class="form-control" placeholder="Nombre o correo" autocomplete="off">
+                </div>
                 <div class="col-md-2">
-                    <label class="form-label">
-                        <i class="bi bi-person-heart me-2"></i>Paciente
-                    </label>
-                    <select name="paciente" class="form-select">
+                    <label class="form-label"><i class="bi bi-person-heart me-2"></i>Paciente</label>
+                    <select name="paciente" id="selectPaciente" class="form-select">
                         <option value="">Todos</option>
                         <c:forEach var="paciente" items="${pacientes}">
-                            <option value="${paciente.id}" ${param.paciente == paciente.id ? 'selected' : ''}>
-                                ${paciente.nombre}
-                            </option>
+                            <option value="${paciente.id}" data-text="${paciente.nombre} ${paciente.email}" ${param.paciente == paciente.id ? 'selected' : ''}>${paciente.nombre}</option>
                         </c:forEach>
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-search me-2"></i>Buscar Psicólogo</label>
+                    <input type="text" id="buscarPsicologo" class="form-control" placeholder="Nombre o correo" autocomplete="off">
+                </div>
                 <div class="col-md-2">
-                    <label class="form-label">
-                        <i class="bi bi-person-check me-2"></i>Psicólogo
-                    </label>
-                    <select name="psicologo" class="form-select">
+                    <label class="form-label"><i class="bi bi-person-check me-2"></i>Psicólogo</label>
+                    <select name="psicologo" id="selectPsicologo" class="form-select">
                         <option value="">Todos</option>
                         <c:forEach var="psicologo" items="${psicologos}">
-                            <option value="${psicologo.id}" ${param.psicologo == psicologo.id ? 'selected' : ''}>
-                                ${psicologo.nombre}
-                            </option>
+                            <option value="${psicologo.id}" data-text="${psicologo.nombre} ${psicologo.email}" ${param.psicologo == psicologo.id ? 'selected' : ''}>${psicologo.nombre}</option>
                         </c:forEach>
                     </select>
                 </div>
@@ -90,24 +92,16 @@
         </div>
     </div>
 
-    <!-- Alertas -->
-    <c:if test="${param.success != null}">
+    <!-- Alertas dinámicas -->
+    <c:if test="${not empty requestScope.success}">
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>
-            <c:choose>
-                <c:when test="${param.success == 'created'}">Cita creada correctamente</c:when>
-                <c:when test="${param.success == 'updated'}">Cita actualizada correctamente</c:when>
-                <c:when test="${param.success == 'deleted'}">Cita eliminada correctamente</c:when>
-                <c:otherwise>${param.success}</c:otherwise>
-            </c:choose>
+            <i class="bi bi-check-circle me-2"></i>${requestScope.success}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
-
-    <c:if test="${param.error != null}">
+    <c:if test="${not empty requestScope.error}">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            ${param.error}
+            <i class="bi bi-exclamation-triangle me-2"></i>${requestScope.error}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
@@ -273,6 +267,38 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function(){
+        function bindSearch(inputId, selectId) {
+            const input = document.getElementById(inputId);
+            const select = document.getElementById(selectId);
+            if (!input || !select) return;
+            const allOpts = Array.from(select.options).map(o => ({ value: o.value, text: o.text, data: (o.getAttribute('data-text')||'').toLowerCase() }));
+            const placeholder = allOpts.shift(); // remove first (Todos)
+            function apply(){
+                const q = (input.value||'').toLowerCase().trim();
+                const current = select.value;
+                // rebuild
+                select.innerHTML = '';
+                const ph = document.createElement('option');
+                ph.value = placeholder.value; ph.text = placeholder.text; select.appendChild(ph);
+                allOpts.forEach(o => {
+                    if (!q || o.text.toLowerCase().includes(q) || o.data.includes(q)) {
+                        const opt = document.createElement('option');
+                        opt.value = o.value; opt.text = o.text;
+                        opt.setAttribute('data-text', o.data);
+                        if (o.value === current) opt.selected = true;
+                        select.appendChild(opt);
+                    }
+                });
+            }
+            input.addEventListener('input', apply);
+        }
+        bindSearch('buscarPaciente','selectPaciente');
+        bindSearch('buscarPsicologo','selectPsicologo');
+    })();
+</script>
 
 <!-- Modal para reasignar psicólogo -->
 <div class="modal fade" id="reasignarModal" tabindex="-1">

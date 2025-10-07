@@ -63,6 +63,49 @@ public class UsuarioDAO {
         return lista;
     }
 
+    public List<Usuario> buscar(String termino, String rol, String estado) {
+        StringBuilder sql = new StringBuilder("SELECT * FROM Usuario WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (termino != null && !termino.trim().isEmpty()) {
+            sql.append(" AND (nombre LIKE ? OR email LIKE ?)");
+            String like = "%" + termino.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        if (rol != null && !rol.trim().isEmpty()) {
+            sql.append(" AND rol = ?");
+            params.add(rol);
+        }
+        if (estado != null && !estado.trim().isEmpty()) {
+            sql.append(" AND estado = ?");
+            params.add(estado);
+        }
+        sql.append(" ORDER BY nombre");
+
+        List<Usuario> lista = new ArrayList<>();
+        try (Connection c = cn.getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Usuario u = new Usuario();
+                    u.setId(rs.getInt("id"));
+                    u.setNombre(rs.getString("nombre"));
+                    u.setEmail(rs.getString("email"));
+                    u.setPasswordd(rs.getString("passwordd"));
+                    u.setRol(rs.getString("rol"));
+                    u.setEstado(rs.getString("estado"));
+                    lista.add(u);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return lista;
+    }
+
     public Usuario obtenerPorId(int id) {
         String sql = "SELECT * FROM Usuario WHERE id=?";
         try (Connection c = cn.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {

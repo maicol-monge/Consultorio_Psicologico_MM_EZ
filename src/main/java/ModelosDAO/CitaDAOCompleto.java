@@ -162,16 +162,48 @@ public class CitaDAOCompleto {
         return citas;
     }
     
-    // Método para verificar disponibilidad del psicólogo
+    // Método para verificar disponibilidad del psicólogo: dentro de horario activo y sin cita ocupando ese cupo
     public boolean verificarDisponibilidad(int idPsicologo, java.util.Date fechaHora) {
+        // 1) Debe existir al menos un horario activo que cubra ese día y hora
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(fechaHora);
+        int dow = cal.get(Calendar.DAY_OF_WEEK);
+        String dia;
+        switch (dow) {
+            case Calendar.MONDAY: dia = "lunes"; break;
+            case Calendar.TUESDAY: dia = "martes"; break;
+            case Calendar.WEDNESDAY: dia = "miércoles"; break;
+            case Calendar.THURSDAY: dia = "jueves"; break;
+            case Calendar.FRIDAY: dia = "viernes"; break;
+            case Calendar.SATURDAY: dia = "sábado"; break;
+            default: dia = "domingo"; break;
+        }
+        Time hora = new Time(fechaHora.getTime());
+
+        String sqlHorario = "SELECT COUNT(*) FROM HorarioPsicologico WHERE id_psicologo=? AND estado='activo' AND dia_semana=? AND hora_inicio <= ? AND hora_fin > ?";
+        try (PreparedStatement ps = connection.prepareStatement(sqlHorario)) {
+            ps.setInt(1, idPsicologo);
+            ps.setString(2, dia);
+            ps.setTime(3, hora);
+            ps.setTime(4, hora);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    return false; // fuera de horario
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        // 2) No debe existir otra cita ocupando ese cupo exacto (misma fecha_hora)
         String sql = "SELECT COUNT(*) FROM Cita WHERE id_psicologo = ? AND fecha_hora = ? AND estado_cita != 'cancelada'";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, idPsicologo);
             stmt.setTimestamp(2, new Timestamp(fechaHora.getTime()));
-            
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return rs.getInt(1) == 0; // Disponible si no hay citas en esa fecha
+                return rs.getInt(1) == 0;
             }
         } catch (SQLException e) {
             e.printStackTrace();

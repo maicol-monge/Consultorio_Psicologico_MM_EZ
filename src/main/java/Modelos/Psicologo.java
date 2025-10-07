@@ -7,6 +7,9 @@ public class Psicologo {
     private String experiencia;
     private String horario;
     private String estado;
+    // Campos derivados del usuario asociado
+    private String nombre;
+    private String email;
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -20,4 +23,9 @@ public class Psicologo {
     public void setHorario(String horario) { this.horario = horario; }
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
+
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 }

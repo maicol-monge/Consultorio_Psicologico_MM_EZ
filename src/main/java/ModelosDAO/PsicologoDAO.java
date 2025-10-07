@@ -39,6 +39,8 @@ public class PsicologoDAO {
                 p.setExperiencia(rs.getString("experiencia"));
                 p.setHorario(rs.getString("horario"));
                 p.setEstado(rs.getString("estado"));
+                p.setNombre(rs.getString("nombre"));
+                p.setEmail(rs.getString("email"));
                 lista.add(p);
             }
         } catch (SQLException e) { e.printStackTrace(); }
@@ -46,7 +48,7 @@ public class PsicologoDAO {
     }
 
     public Psicologo obtenerPorId(int id) {
-        String sql = "SELECT * FROM Psicologo WHERE id=?";
+        String sql = "SELECT p.*, u.nombre, u.email FROM Psicologo p JOIN Usuario u ON p.id_usuario=u.id WHERE p.id=?";
         try (Connection c = cn.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -58,6 +60,8 @@ public class PsicologoDAO {
                     p.setExperiencia(rs.getString("experiencia"));
                     p.setHorario(rs.getString("horario"));
                     p.setEstado(rs.getString("estado"));
+                    p.setNombre(rs.getString("nombre"));
+                    p.setEmail(rs.getString("email"));
                     return p;
                 }
             }

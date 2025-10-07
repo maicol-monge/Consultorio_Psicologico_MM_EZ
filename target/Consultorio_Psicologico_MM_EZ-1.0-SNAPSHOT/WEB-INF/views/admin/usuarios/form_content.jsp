@@ -1,3 +1,5 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!-- Formulario de usuario -->
 <div class="fade-in-up">
     <!-- Header -->
@@ -107,8 +109,16 @@
                                     <label class="form-label">
                                         <i class="bi bi-mortarboard me-2"></i>Especialidad
                                     </label>
-                                    <input type="text" name="especialidad" class="form-control" 
-                                           maxlength="100" placeholder="Ej: Psicología Clínica">
+                                    <select name="especialidad" class="form-select">
+                                        <option value="">Seleccionar especialidad</option>
+                                        <option value="Psicología Clínica" ${psicologo.especialidad == 'Psicología Clínica' ? 'selected' : ''}>Psicología Clínica</option>
+                                        <option value="Psicoterapia" ${psicologo.especialidad == 'Psicoterapia' ? 'selected' : ''}>Psicoterapia</option>
+                                        <option value="Neuropsicología" ${psicologo.especialidad == 'Neuropsicología' ? 'selected' : ''}>Neuropsicología</option>
+                                        <option value="Psicología Infantil" ${psicologo.especialidad == 'Psicología Infantil' ? 'selected' : ''}>Psicología Infantil</option>
+                                        <option value="Psicología Organizacional" ${psicologo.especialidad == 'Psicología Organizacional' ? 'selected' : ''}>Psicología Organizacional</option>
+                                        <option value="Terapia de Pareja" ${psicologo.especialidad == 'Terapia de Pareja' ? 'selected' : ''}>Terapia de Pareja</option>
+                                        <option value="Psicología Educativa" ${psicologo.especialidad == 'Psicología Educativa' ? 'selected' : ''}>Psicología Educativa</option>
+                                    </select>
                                 </div>
                                 
                                 <div class="col-md-6">
@@ -116,7 +126,7 @@
                                         <i class="bi bi-clock-history me-2"></i>Horario
                                     </label>
                                     <input type="text" name="horario" class="form-control" 
-                                           placeholder="Ej: Lun-Vie 09:00-17:00">
+                                           value="${psicologo.horario}" placeholder="Ej: Lun-Vie 09:00-17:00">
                                 </div>
                                 
                                 <div class="col-12">
@@ -124,7 +134,7 @@
                                         <i class="bi bi-journal-text me-2"></i>Experiencia
                                     </label>
                                     <textarea name="experiencia" class="form-control" rows="3"
-                                              placeholder="Descripción de experiencia profesional"></textarea>
+                                              placeholder="Descripción de experiencia profesional">${psicologo.experiencia}</textarea>
                                 </div>
                             </div>
                             

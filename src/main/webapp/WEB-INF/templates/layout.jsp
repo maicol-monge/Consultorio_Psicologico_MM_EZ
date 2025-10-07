@@ -1,5 +1,5 @@
 <!-- Template base con sidebar y navegación -->
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="es">
@@ -25,7 +25,7 @@
         </div>
         
         <c:choose>
-            <c:when test="${sessionScope.usuario != null && sessionScope.usuario.rol == 'admin'}">
+            <c:when test="${sessionScope.user != null && sessionScope.user.rol == 'admin'}">
                 <!-- Menú Admin -->
                 <nav class="nav flex-column">
                     <a class="nav-link ${param.activeMenu == 'dashboard' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/dashboard">
@@ -130,8 +130,8 @@
         <div class="d-flex align-items-center mb-2">
             <i class="bi bi-person-circle fs-4 me-2"></i>
             <div class="sidebar-text">
-                <div class="text-white small">${sessionScope.usuario.nombre}</div>
-                <div class="text-white-50 small text-capitalize">${sessionScope.usuario.rol}</div>
+                <div class="text-white small">${sessionScope.user != null ? sessionScope.user.nombre : ''}</div>
+                <div class="text-white-50 small text-capitalize">${sessionScope.user != null ? sessionScope.user.rol : ''}</div>
             </div>
         </div>
         <a href="${pageContext.request.contextPath}/logout" class="btn btn-outline-light btn-sm d-grid">
@@ -148,7 +148,9 @@
             <i class="bi bi-list"></i>
         </button>
         <h5 class="mb-0">${param.title}</h5>
-        <div></div>
+        <a href="${pageContext.request.contextPath}/logout" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-box-arrow-right"></i>
+        </a>
     </div>
     
     <!-- Content -->

@@ -1,3 +1,7 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
 <!-- Formulario de paciente -->
 <div class="fade-in-up">
     <!-- Header -->
@@ -53,20 +57,23 @@
                                        placeholder="Ingrese nombre completo">
                             </div>
                             
+                            <c:set var="fechaNacVal" value=""/>
+                            <c:if test="${paciente != null && paciente.fechaNacimiento != null}">
+                                <fmt:formatDate value="${paciente.fechaNacimiento}" pattern="yyyy-MM-dd" var="fechaNacVal"/>
+                            </c:if>
                             <div class="col-md-6">
                                 <label class="form-label">
-                                    <i class="bi bi-calendar me-2"></i>Edad *
+                                    <i class="bi bi-calendar me-2"></i>Fecha de Nacimiento *
                                 </label>
-                                <input type="number" name="edad" class="form-control" 
-                                       value="${paciente.edad}" required min="1" max="120"
-                                       placeholder="Edad en años">
+                                <input type="date" name="fecha_nacimiento" class="form-control" 
+                                       value="${fechaNacVal}" required>
                             </div>
                             
                             <div class="col-md-6">
                                 <label class="form-label">
                                     <i class="bi bi-gender-ambiguous me-2"></i>Género
                                 </label>
-                                <select name="genero" class="form-select">
+                                <select name="genero" class="form-select" required>
                                     <option value="">Seleccionar género</option>
                                     <option value="masculino" ${paciente.genero == 'masculino' ? 'selected' : ''}>Masculino</option>
                                     <option value="femenino" ${paciente.genero == 'femenino' ? 'selected' : ''}>Femenino</option>
@@ -77,10 +84,10 @@
                             
                             <div class="col-md-6">
                                 <label class="form-label">
-                                    <i class="bi bi-envelope me-2"></i>Email *
+                                    <i class="bi bi-envelope me-2"></i>Email
                                 </label>
                                 <input type="email" name="email" class="form-control" 
-                                       value="${paciente.email}" required maxlength="100"
+                                       value="${paciente.email}" maxlength="100"
                                        placeholder="paciente@ejemplo.com">
                             </div>
                             
@@ -101,6 +108,16 @@
                                        value="${paciente.direccion}" maxlength="255"
                                        placeholder="Dirección completa">
                             </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-person-vcard me-2"></i>DUI
+                                </label>
+                                <input type="text" name="dui" class="form-control"
+                                       value="${paciente.dui}" maxlength="20"
+                                       placeholder="00000000-0">
+                                <small class="text-muted">Opcional</small>
+                            </div>
                             
                             <!-- Información médica -->
                             <div class="col-12 mt-4">
@@ -111,36 +128,13 @@
                             
                             <div class="col-12">
                                 <label class="form-label">
-                                    <i class="bi bi-file-medical me-2"></i>Historial Médico
+                                    <i class="bi bi-file-medical me-2"></i>Historial Clínico
                                 </label>
-                                <textarea name="historialMedico" class="form-control" rows="3"
-                                          placeholder="Antecedentes médicos relevantes, medicamentos, alergias, etc.">${paciente.historialMedico}</textarea>
+                                <textarea name="historial_clinico" class="form-control" rows="3"
+                                          placeholder="Antecedentes médicos relevantes, medicamentos, alergias, etc.">${paciente.historialClinico}</textarea>
                             </div>
                             
-                            <!-- Asignación de psicólogo -->
-                            <div class="col-12 mt-4">
-                                <h6 class="text-muted mb-3">
-                                    <i class="bi bi-person-check me-2"></i>Asignación Profesional
-                                </h6>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label">
-                                    <i class="bi bi-person-heart me-2"></i>Psicólogo Asignado
-                                </label>
-                                <select name="idPsicologo" class="form-select">
-                                    <option value="">Sin asignar</option>
-                                    <c:forEach var="psicologo" items="${psicologos}">
-                                        <option value="${psicologo.id}" 
-                                                ${paciente.idPsicologo == psicologo.id ? 'selected' : ''}>
-                                            ${psicologo.nombre} - ${psicologo.especialidad}
-                                        </option>
-                                    </c:forEach>
-                                </select>
-                                <small class="form-text text-muted">
-                                    El paciente será asignado a este psicólogo para sus sesiones
-                                </small>
-                            </div>
+                            <!-- Se elimina la asignación de psicólogo según requerimiento -->
                             
                             <div class="col-md-6">
                                 <label class="form-label">
@@ -152,29 +146,7 @@
                                 </select>
                             </div>
                             
-                            <!-- Código de acceso -->
-                            <c:if test="${paciente != null}">
-                                <div class="col-12 mt-4">
-                                    <h6 class="text-muted mb-3">
-                                        <i class="bi bi-key me-2"></i>Código de Acceso
-                                    </h6>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <label class="form-label">
-                                        <i class="bi bi-qr-code me-2"></i>Código Actual
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" value="${paciente.codigoAcceso}" readonly>
-                                        <button type="button" class="btn btn-outline-primary" onclick="generarNuevoCodigo()">
-                                            <i class="bi bi-arrow-clockwise me-2"></i>Regenerar
-                                        </button>
-                                    </div>
-                                    <small class="form-text text-muted">
-                                        Este código permite al paciente acceder a su información
-                                    </small>
-                                </div>
-                            </c:if>
+                            <!-- Código de acceso/QR: omitido según requerimiento -->
                             
                             <!-- Botones -->
                             <div class="col-12 mt-4">
@@ -202,21 +174,4 @@
     </div>
 </div>
 
-<script>
-function generarNuevoCodigo() {
-    if (confirm('¿Está seguro de regenerar el código de acceso? El código anterior dejará de funcionar.')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '${pageContext.request.contextPath}/admin/pacientes/regenerar-codigo';
-        
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'id';
-        input.value = '${paciente.id}';
-        
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-</script>
+<script></script>

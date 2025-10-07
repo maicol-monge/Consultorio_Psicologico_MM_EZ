@@ -1,3 +1,4 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!-- Formulario de Cita -->
 <div class="fade-in-up">
     <!-- Header -->
@@ -20,11 +21,18 @@
         </a>
     </div>
 
-    <!-- Alertas -->
-    <c:if test="${param.error != null}">
+    <!-- Alertas dinámicas -->
+    <c:if test="${not empty requestScope.success}">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            ${requestScope.success}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </c:if>
+    <c:if test="${not empty requestScope.error}">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle me-2"></i>
-            ${param.error}
+            ${requestScope.error}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
