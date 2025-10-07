@@ -1,4 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!-- Gestión de Citas -->
 <div class="fade-in-up">
     <!-- Header -->
@@ -15,11 +17,13 @@
                 </ol>
             </nav>
         </div>
+        <c:url value="/admin/citas/nueva" var="urlNueva"/>
+        <c:url value="/admin/citas/calendario" var="urlCalendario"/>
         <div class="btn-group">
-            <a href="${pageContext.request.contextPath}/admin/citas/nueva" class="btn btn-primary">
+            <a href="${urlNueva}" class="btn btn-primary">
                 <i class="bi bi-calendar-plus me-2"></i>Nueva Cita
             </a>
-            <a href="${pageContext.request.contextPath}/admin/citas/calendario" class="btn btn-outline-info">
+            <a href="${urlCalendario}" class="btn btn-outline-info">
                 <i class="bi bi-calendar-week me-2"></i>Vista Calendario
             </a>
         </div>
@@ -48,17 +52,16 @@
                     <select name="estado" class="form-select">
                         <option value="">Todos</option>
                         <option value="pendiente" ${param.estado == 'pendiente' ? 'selected' : ''}>Pendiente</option>
-                        <option value="confirmada" ${param.estado == 'confirmada' ? 'selected' : ''}>Confirmada</option>
                         <option value="realizada" ${param.estado == 'realizada' ? 'selected' : ''}>Realizada</option>
                         <option value="cancelada" ${param.estado == 'cancelada' ? 'selected' : ''}>Cancelada</option>
                     </select>
                 </div>
                 <div class="w-100"></div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <label class="form-label"><i class="bi bi-search me-2"></i>Buscar Paciente</label>
                     <input type="text" id="buscarPaciente" class="form-control" placeholder="Nombre o correo" autocomplete="off">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <label class="form-label"><i class="bi bi-person-heart me-2"></i>Paciente</label>
                     <select name="paciente" id="selectPaciente" class="form-select">
                         <option value="">Todos</option>
@@ -67,11 +70,11 @@
                         </c:forEach>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <label class="form-label"><i class="bi bi-search me-2"></i>Buscar Psicólogo</label>
                     <input type="text" id="buscarPsicologo" class="form-control" placeholder="Nombre o correo" autocomplete="off">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <label class="form-label"><i class="bi bi-person-check me-2"></i>Psicólogo</label>
                     <select name="psicologo" id="selectPsicologo" class="form-select">
                         <option value="">Todos</option>
@@ -187,11 +190,7 @@
                                                         <i class="bi bi-clock me-1"></i>Pendiente
                                                     </span>
                                                 </c:when>
-                                                <c:when test="${cita.estadoCita == 'confirmada'}">
-                                                    <span class="badge bg-info">
-                                                        <i class="bi bi-check-circle me-1"></i>Confirmada
-                                                    </span>
-                                                </c:when>
+                                                
                                                 <c:when test="${cita.estadoCita == 'realizada'}">
                                                     <span class="badge bg-success">
                                                         <i class="bi bi-check-circle-fill me-1"></i>Realizada
@@ -222,15 +221,7 @@
                                                         <i class="bi bi-three-dots-vertical"></i>
                                                     </button>
                                                     <ul class="dropdown-menu">
-                                                        <c:if test="${cita.estadoCita == 'pendiente'}">
-                                                            <li>
-                                                                <button class="dropdown-item" 
-                                                                        onclick="cambiarEstado(${cita.id}, 'confirmada')">
-                                                                    <i class="bi bi-check-circle me-2"></i>Confirmar
-                                                                </button>
-                                                            </li>
-                                                        </c:if>
-                                                        <c:if test="${cita.estadoCita == 'confirmada'}">
+                                                        <c:if test="${cita.estadoCita != 'realizada' && cita.estadoCita != 'cancelada'}">
                                                             <li>
                                                                 <button class="dropdown-item text-success" 
                                                                         onclick="cambiarEstado(${cita.id}, 'realizada')">
@@ -242,7 +233,7 @@
                                                             <li><hr class="dropdown-divider"></li>
                                                             <li>
                                                                 <button class="dropdown-item text-warning" 
-                                                                        onclick="mostrarReasignar(${cita.id})">
+                                                                        onclick="mostrarReasignar(${cita.id}, '<fmt:formatDate value='${cita.fechaHora}' pattern='yyyy-MM-dd'/>')">
                                                                     <i class="bi bi-arrow-repeat me-2"></i>Reasignar Psicólogo
                                                                 </button>
                                                             </li>
@@ -314,14 +305,26 @@
             <div class="modal-body">
                 <form id="formReasignar">
                     <input type="hidden" id="citaIdReasignar" name="id">
+                    <input type="hidden" id="fechaCitaReasignar" name="fecha">
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-search me-2"></i>Buscar Psicólogo</label>
+                        <input type="text" id="buscarPsicologoReasignarLista" class="form-control" placeholder="Nombre o correo" autocomplete="off">
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Nuevo Psicólogo</label>
-                        <select name="nuevoIdPsicologo" class="form-select" required>
+                        <select name="nuevoIdPsicologo" id="selectPsicologoReasignarLista" class="form-select" required>
                             <option value="">Seleccionar psicólogo</option>
                             <c:forEach var="psicologo" items="${psicologos}">
-                                <option value="${psicologo.id}">${psicologo.nombre} - ${psicologo.especialidad}</option>
+                                <option value="${psicologo.id}" data-text="${psicologo.nombre} ${psicologo.email}">${psicologo.nombre} - ${psicologo.especialidad}</option>
                             </c:forEach>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Hora disponible</label>
+                        <select name="nuevaHora" id="selectHoraReasignarLista" class="form-select" required>
+                            <option value="">Seleccionar hora</option>
+                        </select>
+                        <div class="form-text">Las horas se calculan según el horario del psicólogo para la fecha de la cita.</div>
                     </div>
                 </form>
             </div>
@@ -366,15 +369,73 @@ function cambiarEstado(idCita, nuevoEstado) {
     }
 }
 
-function mostrarReasignar(idCita) {
+function mostrarReasignar(idCita, fechaIso) {
     document.getElementById('citaIdReasignar').value = idCita;
-    new bootstrap.Modal(document.getElementById('reasignarModal')).show();
+    document.getElementById('fechaCitaReasignar').value = fechaIso || '';
+    const modalEl = document.getElementById('reasignarModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    // Bind search
+    (function bindSearch() {
+        const input = document.getElementById('buscarPsicologoReasignarLista');
+        const select = document.getElementById('selectPsicologoReasignarLista');
+        if (!input || !select) return;
+        if (!select._allOptions) {
+            select._allOptions = Array.from(select.options).map(o => ({
+                value: o.value,
+                text: o.text,
+                data: (o.getAttribute('data-text')|| (o.text||'')).toLowerCase()
+            }));
+            select._placeholder = select._allOptions.shift();
+        }
+        function apply(){
+            const q = (input.value||'').toLowerCase().trim();
+            const current = select.value;
+            select.innerHTML = '';
+            const ph = document.createElement('option');
+            ph.value = select._placeholder.value || '';
+            ph.text = select._placeholder.text || 'Seleccionar psicólogo';
+            select.appendChild(ph);
+            select._allOptions.forEach(o => {
+                if (!q || o.text.toLowerCase().includes(q) || o.data.includes(q)) {
+                    const opt = document.createElement('option');
+                    opt.value = o.value; opt.text = o.text;
+                    opt.setAttribute('data-text', o.data);
+                    if (o.value === current) opt.selected = true;
+                    select.appendChild(opt);
+                }
+            });
+        }
+        if (!input._bound) {
+            input.addEventListener('input', apply);
+            input._bound = true;
+        }
+        apply();
+    })();
+
+    // Hours load
+    const selPs = document.getElementById('selectPsicologoReasignarLista');
+    if (selPs) {
+        selPs.removeEventListener('change', cargarHorasReasignacionLista);
+        selPs.addEventListener('change', cargarHorasReasignacionLista);
+        cargarHorasReasignacionLista();
+    }
 }
 
 function ejecutarReasignacion() {
     const form = document.getElementById('formReasignar');
     const formData = new FormData(form);
     
+    if (!formData.get('nuevoIdPsicologo')) {
+        alert('Por favor selecciona un psicólogo');
+        return;
+    }
+    if (!formData.get('nuevaHora')) {
+        alert('Por favor selecciona una hora disponible');
+        return;
+    }
+
     const submitForm = document.createElement('form');
     submitForm.method = 'POST';
     submitForm.action = '${pageContext.request.contextPath}/admin/citas/reasignar';
@@ -395,5 +456,41 @@ function exportarCitas(tipo) {
     const params = new URLSearchParams(window.location.search);
     params.set('export', tipo);
     window.open('${pageContext.request.contextPath}/admin/citas/export?' + params.toString(), '_blank');
+}
+
+// Helpers to fetch available hours for list modal
+const CTX_LISTA = '${pageContext.request.contextPath}';
+async function cargarHorasReasignacionLista() {
+    const selPs = document.getElementById('selectPsicologoReasignarLista');
+    const selHora = document.getElementById('selectHoraReasignarLista');
+    const fecha = document.getElementById('fechaCitaReasignar').value;
+    if (!selPs || !selHora) return;
+    const idPs = selPs.value;
+    selHora.innerHTML = '<option value="">Cargando...</option>';
+    if (!idPs || !fecha) {
+        selHora.innerHTML = '<option value="">Seleccionar hora</option>';
+        return;
+    }
+    try {
+        const resp = await fetch(CTX_LISTA + '/admin/citas/horas?psicologo=' + encodeURIComponent(idPs) + '&fecha=' + encodeURIComponent(fecha));
+        const data = await resp.json();
+        const disponibles = Array.isArray(data) ? data : (data.disponibles || []);
+        selHora.innerHTML = '';
+        if (!disponibles.length) {
+            selHora.innerHTML = '<option value="">Sin horas disponibles</option>';
+            return;
+        }
+        const ph = document.createElement('option');
+        ph.value = ''; ph.text = 'Seleccionar hora';
+        selHora.appendChild(ph);
+        disponibles.forEach(h => {
+            const opt = document.createElement('option');
+            opt.value = h; opt.text = h;
+            selHora.appendChild(opt);
+        });
+    } catch (e) {
+        selHora.innerHTML = '<option value="">Error al cargar horas</option>';
+        console.error('Error cargando horas disponibles:', e);
+    }
 }
 </script>

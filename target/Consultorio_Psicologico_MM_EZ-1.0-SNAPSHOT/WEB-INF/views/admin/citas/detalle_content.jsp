@@ -1,3 +1,6 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!-- Detalle de Cita -->
 <div class="fade-in-up">
     <!-- Header -->
@@ -59,11 +62,7 @@
                                 <i class="bi bi-clock me-1"></i>Pendiente
                             </span>
                         </c:when>
-                        <c:when test="${cita.estadoCita == 'confirmada'}">
-                            <span class="badge bg-info fs-6">
-                                <i class="bi bi-check-circle me-1"></i>Confirmada
-                            </span>
-                        </c:when>
+                        
                         <c:when test="${cita.estadoCita == 'realizada'}">
                             <span class="badge bg-success fs-6">
                                 <i class="bi bi-check-circle-fill me-1"></i>Realizada
@@ -79,12 +78,7 @@
                 <c:if test="${cita.estadoCita != 'realizada' && cita.estadoCita != 'cancelada'}">
                     <div class="card-body">
                         <div class="d-flex gap-2 flex-wrap">
-                            <c:if test="${cita.estadoCita == 'pendiente'}">
-                                <button class="btn btn-sm btn-info" onclick="cambiarEstado('confirmada')">
-                                    <i class="bi bi-check-circle me-2"></i>Confirmar Cita
-                                </button>
-                            </c:if>
-                            <c:if test="${cita.estadoCita == 'confirmada'}">
+                            <c:if test="${cita.estadoCita != 'realizada' && cita.estadoCita != 'cancelada'}">
                                 <button class="btn btn-sm btn-success" onclick="cambiarEstado('realizada')">
                                     <i class="bi bi-check-circle-fill me-2"></i>Marcar como Realizada
                                 </button>
@@ -128,7 +122,7 @@
                                 <label class="text-muted small">DURACIÓN</label>
                                 <div class="fw-semibold">
                                     <i class="bi bi-clock-history text-info me-2"></i>
-                                    ${cita.duracion != null ? cita.duracion : 60} minutos
+                                    60 minutos
                                 </div>
                             </div>
                         </div>
@@ -216,7 +210,14 @@
                         </div>
                         <div>
                             <h6 class="mb-1">${paciente.nombre}</h6>
-                            <p class="text-muted mb-0">${paciente.edad} años</p>
+                            <p class="text-muted mb-0">
+                                <c:choose>
+                                    <c:when test="${not empty paciente.fechaNacimiento}">
+                                        Nac.: <fmt:formatDate value="${paciente.fechaNacimiento}" pattern="dd/MM/yyyy"/>
+                                    </c:when>
+                                    <c:otherwise>-</c:otherwise>
+                                </c:choose>
+                            </p>
                         </div>
                     </div>
                     
@@ -238,12 +239,6 @@
                         </div>
                     </div>
                     
-                    <div class="mt-3">
-                        <a href="${pageContext.request.contextPath}/admin/pacientes/ver/${paciente.id}" 
-                           class="btn btn-outline-info btn-sm">
-                            <i class="bi bi-eye me-2"></i>Ver Perfil Completo
-                        </a>
-                    </div>
                 </div>
             </div>
 
@@ -268,28 +263,12 @@
                     
                     <div class="info-group">
                         <div class="info-item mb-2">
-                            <i class="bi bi-telephone text-muted me-2"></i>
-                            <span class="text-muted">Teléfono:</span>
-                            <span class="fw-semibold">${psicologo.telefono}</span>
-                        </div>
-                        <div class="info-item mb-2">
                             <i class="bi bi-envelope text-muted me-2"></i>
                             <span class="text-muted">Email:</span>
                             <span class="fw-semibold">${psicologo.email}</span>
                         </div>
-                        <div class="info-item">
-                            <i class="bi bi-award text-muted me-2"></i>
-                            <span class="text-muted">Licencia:</span>
-                            <span class="fw-semibold">${psicologo.numeroLicencia}</span>
-                        </div>
                     </div>
                     
-                    <div class="mt-3">
-                        <a href="${pageContext.request.contextPath}/admin/psicologos/ver/${psicologo.id}" 
-                           class="btn btn-outline-success btn-sm">
-                            <i class="bi bi-eye me-2"></i>Ver Perfil Completo
-                        </a>
-                    </div>
                 </div>
             </div>
 
@@ -307,12 +286,6 @@
                            class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-calendar-plus me-2"></i>Nueva Cita para este Paciente
                         </a>
-                        <button type="button" class="btn btn-outline-info btn-sm" onclick="verHistorialCitas()">
-                            <i class="bi bi-clock-history me-2"></i>Historial de Citas
-                        </button>
-                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="enviarRecordatorio()">
-                            <i class="bi bi-bell me-2"></i>Enviar Recordatorio
-                        </button>
                         <c:if test="${cita.estadoCita == 'realizada'}">
                             <button type="button" class="btn btn-outline-success btn-sm" onclick="generarInforme()">
                                 <i class="bi bi-file-earmark-text me-2"></i>Generar Informe
@@ -345,8 +318,12 @@
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-search me-2"></i>Buscar Psicólogo</label>
+                        <input type="text" id="buscarPsicologoReasignarDetalle" class="form-control" placeholder="Nombre o correo" autocomplete="off">
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Nuevo Psicólogo</label>
-                        <select name="nuevoIdPsicologo" class="form-select" required>
+                        <select name="nuevoIdPsicologo" id="selectPsicologoReasignarDetalle" class="form-select" required>
                             <option value="">Seleccionar psicólogo</option>
                             <c:forEach var="ps" items="${psicologos}">
                                 <c:if test="${ps.id != psicologo.id}">
@@ -354,6 +331,17 @@
                                 </c:if>
                             </c:forEach>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha de la cita</label>
+                        <input type="text" class="form-control" value="<fmt:formatDate value='${cita.fechaHora}' pattern='dd/MM/yyyy'/>" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Hora disponible</label>
+                        <select name="nuevaHora" id="selectHoraReasignarDetalle" class="form-select" required>
+                            <option value="">Seleccionar hora</option>
+                        </select>
+                        <div class="form-text">Las horas se calculan según el horario del psicólogo seleccionado para la fecha de esta cita.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Motivo del cambio</label>
@@ -451,7 +439,58 @@ function cambiarEstado(nuevoEstado) {
 }
 
 function mostrarReasignar() {
-    new bootstrap.Modal(document.getElementById('reasignarModal')).show();
+    const modalEl = document.getElementById('reasignarModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    // Bind search for psychologists in modal
+    (function bindSearch() {
+        const input = document.getElementById('buscarPsicologoReasignarDetalle');
+        const select = document.getElementById('selectPsicologoReasignarDetalle');
+        if (!input || !select) return;
+        // Cache all options on first bind
+        if (!select._allOptions) {
+            select._allOptions = Array.from(select.options).map(o => ({
+                value: o.value,
+                text: o.text,
+                data: (o.getAttribute('data-text')|| (o.text||'')).toLowerCase()
+            }));
+            // Ensure first option (placeholder) remains at top
+            select._placeholder = select._allOptions.shift();
+        }
+        function apply() {
+            const q = (input.value||'').toLowerCase().trim();
+            const current = select.value;
+            select.innerHTML = '';
+            const ph = document.createElement('option');
+            ph.value = select._placeholder.value || '';
+            ph.text = select._placeholder.text || 'Seleccionar psicólogo';
+            select.appendChild(ph);
+            select._allOptions.forEach(o => {
+                if (!q || o.text.toLowerCase().includes(q) || o.data.includes(q)) {
+                    const opt = document.createElement('option');
+                    opt.value = o.value; opt.text = o.text;
+                    opt.setAttribute('data-text', o.data);
+                    if (o.value === current) opt.selected = true;
+                    select.appendChild(opt);
+                }
+            });
+        }
+        if (!input._bound) {
+            input.addEventListener('input', apply);
+            input._bound = true;
+        }
+        // Initial apply to ensure options consistent after multiple opens
+        apply();
+    })();
+
+    // Load hours for selected psychologist
+    const selPs = document.getElementById('selectPsicologoReasignarDetalle');
+    if (selPs) {
+        selPs.removeEventListener('change', cargarHorasReasignacionDetalle);
+        selPs.addEventListener('change', cargarHorasReasignacionDetalle);
+        cargarHorasReasignacionDetalle();
+    }
 }
 
 function ejecutarReasignacion() {
@@ -460,6 +499,10 @@ function ejecutarReasignacion() {
     
     if (!formData.get('nuevoIdPsicologo')) {
         alert('Por favor selecciona un psicólogo');
+        return;
+    }
+    if (!formData.get('nuevaHora')) {
+        alert('Por favor selecciona una hora disponible');
         return;
     }
     
@@ -498,5 +541,41 @@ function enviarRecordatorio() {
 
 function generarInforme() {
     window.open('${pageContext.request.contextPath}/admin/citas/informe/${cita.id}', '_blank');
+}
+
+// Helpers to fetch and populate available hours in detail modal
+const CTX_DETALLE = '${pageContext.request.contextPath}';
+const FECHA_CITA_ISO_DETALLE = '<fmt:formatDate value="${cita.fechaHora}" pattern="yyyy-MM-dd"/>';
+async function cargarHorasReasignacionDetalle() {
+    const selPs = document.getElementById('selectPsicologoReasignarDetalle');
+    const selHora = document.getElementById('selectHoraReasignarDetalle');
+    if (!selPs || !selHora) return;
+    const idPs = selPs.value;
+    selHora.innerHTML = '<option value="">Cargando...</option>';
+    if (!idPs) {
+        selHora.innerHTML = '<option value="">Seleccionar hora</option>';
+        return;
+    }
+    try {
+        const resp = await fetch(CTX_DETALLE + '/admin/citas/horas?psicologo=' + encodeURIComponent(idPs) + '&fecha=' + encodeURIComponent(FECHA_CITA_ISO_DETALLE));
+        const data = await resp.json();
+        const disponibles = Array.isArray(data) ? data : (data.disponibles || []);
+        selHora.innerHTML = '';
+        if (!disponibles.length) {
+            selHora.innerHTML = '<option value="">Sin horas disponibles</option>';
+            return;
+        }
+        const ph = document.createElement('option');
+        ph.value = ''; ph.text = 'Seleccionar hora';
+        selHora.appendChild(ph);
+        disponibles.forEach(h => {
+            const opt = document.createElement('option');
+            opt.value = h; opt.text = h;
+            selHora.appendChild(opt);
+        });
+    } catch (e) {
+        selHora.innerHTML = '<option value="">Error al cargar horas</option>';
+        console.error('Error cargando horas disponibles:', e);
+    }
 }
 </script>

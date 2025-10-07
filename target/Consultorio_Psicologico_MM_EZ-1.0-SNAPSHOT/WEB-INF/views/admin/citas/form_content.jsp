@@ -1,4 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!-- Formulario de Cita -->
 <div class="fade-in-up">
     <!-- Header -->
@@ -37,7 +39,8 @@
         </div>
     </c:if>
 
-    <form method="post" action="${pageContext.request.contextPath}/admin/citas/${cita != null ? 'editar' : 'nueva'}" 
+    <c:set var="accionCita" value="${cita != null ? 'editar' : 'nueva'}"/>
+    <form method="post" action="${pageContext.request.contextPath}/admin/citas/${accionCita}" 
           id="formCita" class="needs-validation" novalidate>
         
         <!-- ID oculto para edición -->
@@ -63,41 +66,18 @@
                             <select name="idPaciente" class="form-select" required onchange="cargarInfoPaciente(this.value)">
                                 <option value="">Seleccionar paciente...</option>
                                 <c:forEach var="paciente" items="${pacientes}">
-                                    <option value="${paciente.id}" 
-                                            ${cita != null && cita.idPaciente == paciente.id ? 'selected' : ''}
+                                    <fmt:formatDate value="${paciente.fechaNacimiento}" pattern="yyyy-MM-dd" var="fnac"/>
+                                    <option value="${paciente.id}"
+                                            ${ (cita != null && cita.idPaciente == paciente.id) || (cita == null && param.paciente == paciente.id) ? 'selected' : '' }
                                             data-telefono="${paciente.telefono}"
                                             data-email="${paciente.email}"
-                                            data-edad="${paciente.edad}">
+                                            data-nacimiento="${fnac}">
                                         ${paciente.nombre}
                                     </option>
                                 </c:forEach>
                             </select>
                             <div class="invalid-feedback">
                                 Por favor selecciona un paciente
-                            </div>
-                        </div>
-
-                        <!-- Info adicional del paciente -->
-                        <div id="infoPaciente" class="mt-3" style="display: none;">
-                            <div class="bg-light rounded p-3">
-                                <h6 class="mb-2">
-                                    <i class="bi bi-info-circle text-primary me-2"></i>
-                                    Información del Paciente
-                                </h6>
-                                <div class="row">
-                                    <div class="col-sm-6">
-                                        <small class="text-muted">Teléfono:</small>
-                                        <div id="telefonoPaciente" class="fw-semibold">-</div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <small class="text-muted">Email:</small>
-                                        <div id="emailPaciente" class="fw-semibold">-</div>
-                                    </div>
-                                    <div class="col-sm-6 mt-2">
-                                        <small class="text-muted">Edad:</small>
-                                        <div id="edadPaciente" class="fw-semibold">-</div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -130,10 +110,9 @@
                             <select name="idPsicologo" class="form-select" required onchange="cargarInfoPsicologo(this.value)">
                                 <option value="">Seleccionar psicólogo...</option>
                                 <c:forEach var="psicologo" items="${psicologos}">
-                                    <option value="${psicologo.id}" 
+                                    <option value="${psicologo.id}"
                                             ${cita != null && cita.idPsicologo == psicologo.id ? 'selected' : ''}
                                             data-especialidad="${psicologo.especialidad}"
-                                            data-telefono="${psicologo.telefono}"
                                             data-email="${psicologo.email}">
                                         ${psicologo.nombre}
                                     </option>
@@ -144,29 +123,7 @@
                             </div>
                         </div>
 
-                        <!-- Info adicional del psicólogo -->
-                        <div id="infoPsicologo" class="mt-3" style="display: none;">
-                            <div class="bg-light rounded p-3">
-                                <h6 class="mb-2">
-                                    <i class="bi bi-info-circle text-primary me-2"></i>
-                                    Información del Psicólogo
-                                </h6>
-                                <div class="row">
-                                    <div class="col-12 mb-2">
-                                        <small class="text-muted">Especialidad:</small>
-                                        <div id="especialidadPsicologo" class="fw-semibold">-</div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <small class="text-muted">Teléfono:</small>
-                                        <div id="telefonoPsicologo" class="fw-semibold">-</div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <small class="text-muted">Email:</small>
-                                        <div id="emailPsicologo" class="fw-semibold">-</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        
 
                         <!-- Verificar disponibilidad -->
                         <div class="mt-3">
@@ -188,16 +145,22 @@
                 </h5>
             </div>
             <div class="card-body">
+                <!-- Preformateo de fechas para evitar tags dentro de atributos (null-safe) -->
+                <c:set var="fechaValor" value=""/>
+                <c:if test="${not empty cita}">
+                    <fmt:formatDate value='${cita.fechaHora}' pattern='yyyy-MM-dd' var='fechaValor' />
+                </c:if>
+                <fmt:formatDate value='${fechaMinima}' pattern='yyyy-MM-dd' var='fechaMin' />
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label class="form-label">
                                 <i class="bi bi-calendar-date me-2"></i>Fecha *
                             </label>
-                            <input type="date" name="fecha" class="form-control" required
-                                   value="<fmt:formatDate value='${cita.fechaHora}' pattern='yyyy-MM-dd'/>"
-                                   min="<fmt:formatDate value='${fechaMinima}' pattern='yyyy-MM-dd'/>"
-                                   onchange="validarFecha(this.value)">
+                <input type="date" name="fecha" class="form-control" required
+                    value="${fechaValor}"
+                    min="${fechaMin}"
+                    onchange="onFechaOrPsicoChange()">
                             <div class="invalid-feedback">
                                 Por favor selecciona una fecha válida
                             </div>
@@ -208,16 +171,10 @@
                             <label class="form-label">
                                 <i class="bi bi-clock me-2"></i>Hora *
                             </label>
-                            <select name="hora" class="form-select" required>
+                            <select name="hora" id="selectHora" class="form-select" required>
                                 <option value="">Seleccionar hora...</option>
-                                <c:forEach var="hora" begin="8" end="17">
-                                    <c:forEach var="minuto" items="00,30">
-                                        <c:set var="horaCompleta" value="${hora}:${minuto}"/>
-                                        <option value="${horaCompleta}" 
-                                                ${cita != null && hora == hora_seleccionada && minuto == minuto_seleccionado ? 'selected' : ''}>
-                                            ${horaCompleta}
-                                        </option>
-                                    </c:forEach>
+                                <c:forEach var="h" items="${horasDisponibles}">
+                                    <option value="${h}">${h}</option>
                                 </c:forEach>
                             </select>
                             <div class="invalid-feedback">
@@ -226,21 +183,7 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label">
-                                <i class="bi bi-clock-history me-2"></i>Duración (minutos)
-                            </label>
-                            <select name="duracion" class="form-select">
-                                <option value="30" ${cita != null && cita.duracion == 30 ? 'selected' : ''}>30 minutos</option>
-                                <option value="45" ${cita != null && cita.duracion == 45 ? 'selected' : ''}>45 minutos</option>
-                                <option value="60" ${cita != null && cita.duracion == 60 ? 'selected' : 'selected'}>60 minutos</option>
-                                <option value="90" ${cita != null && cita.duracion == 90 ? 'selected' : ''}>90 minutos</option>
-                            </select>
-                        </div>
-                    </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label class="form-label">
@@ -248,7 +191,6 @@
                             </label>
                             <select name="estadoCita" class="form-select">
                                 <option value="pendiente" ${cita == null || cita.estadoCita == 'pendiente' ? 'selected' : ''}>Pendiente</option>
-                                <option value="confirmada" ${cita != null && cita.estadoCita == 'confirmada' ? 'selected' : ''}>Confirmada</option>
                                 <c:if test="${cita != null}">
                                     <option value="realizada" ${cita.estadoCita == 'realizada' ? 'selected' : ''}>Realizada</option>
                                     <option value="cancelada" ${cita.estadoCita == 'cancelada' ? 'selected' : ''}>Cancelada</option>
@@ -260,13 +202,11 @@
 
                 <div class="mb-3">
                     <label class="form-label">
-                        <i class="bi bi-chat-left-text me-2"></i>Motivo de Consulta *
+                        <i class="bi bi-chat-left-text me-2"></i>Motivo de Consulta 
                     </label>
-                    <textarea name="motivoConsulta" class="form-control" rows="3" required 
-                              placeholder="Describe el motivo de la consulta...">${cita != null ? cita.motivoConsulta : ''}</textarea>
-                    <div class="invalid-feedback">
-                        Por favor describe el motivo de la consulta
-                    </div>
+                    <textarea name="motivoConsulta" class="form-control" rows="3"
+                              placeholder="Describe el motivo de la consulta (opcional)...">${cita != null ? cita.motivoConsulta : ''}</textarea>
+                    <div class="form-text">Opcional</div>
                 </div>
 
                 <div class="mb-3">
@@ -275,6 +215,7 @@
                     </label>
                     <textarea name="observaciones" class="form-control" rows="2" 
                               placeholder="Observaciones adicionales (opcional)...">${cita != null ? cita.observaciones : ''}</textarea>
+                    <div class="form-text">Campo opcional (no se persiste si la columna no existe en BD)</div>
                 </div>
             </div>
         </div>
@@ -345,18 +286,40 @@
                 form.classList.add('was-validated');
             }, false);
         });
+
+        // Si hay un paciente preseleccionado (por query param o en edición), cargar su info
+        try {
+            var selPac = document.querySelector('select[name="idPaciente"]');
+            if (selPac && selPac.value) {
+                cargarInfoPaciente(selPac.value);
+            }
+        } catch (e) { /* noop */ }
     }, false);
 })();
 
+// Context path seguro para construir URLs sin conflicto con template literals
+const ctx = '<c:out value="${pageContext.request.contextPath}"/>';
+
 function cargarInfoPaciente(idPaciente) {
     const select = document.querySelector('select[name="idPaciente"]');
-    const selectedOption = select.querySelector(`option[value="${idPaciente}"]`);
+    let selectedOption = select.querySelector(`option[value="${idPaciente}"]`);
+    if (!selectedOption) selectedOption = select.selectedOptions && select.selectedOptions[0] ? select.selectedOptions[0] : null;
     const infoDiv = document.getElementById('infoPaciente');
     
     if (selectedOption && idPaciente) {
         document.getElementById('telefonoPaciente').textContent = selectedOption.dataset.telefono || '-';
         document.getElementById('emailPaciente').textContent = selectedOption.dataset.email || '-';
-        document.getElementById('edadPaciente').textContent = selectedOption.dataset.edad ? selectedOption.dataset.edad + ' años' : '-';
+        const nac = selectedOption.dataset.nacimiento;
+        if (nac) {
+            const hoy = new Date();
+            const dn = new Date(nac);
+            let edad = hoy.getFullYear() - dn.getFullYear();
+            const m = hoy.getMonth() - dn.getMonth();
+            if (m < 0 || (m === 0 && hoy.getDate() < dn.getDate())) edad--;
+            document.getElementById('edadPaciente').textContent = edad + ' años';
+        } else {
+            document.getElementById('edadPaciente').textContent = '-';
+        }
         infoDiv.style.display = 'block';
     } else {
         infoDiv.style.display = 'none';
@@ -365,12 +328,12 @@ function cargarInfoPaciente(idPaciente) {
 
 function cargarInfoPsicologo(idPsicologo) {
     const select = document.querySelector('select[name="idPsicologo"]');
-    const selectedOption = select.querySelector(`option[value="${idPsicologo}"]`);
+    let selectedOption = select.querySelector(`option[value="${idPsicologo}"]`);
+    if (!selectedOption) selectedOption = select.selectedOptions && select.selectedOptions[0] ? select.selectedOptions[0] : null;
     const infoDiv = document.getElementById('infoPsicologo');
     
     if (selectedOption && idPsicologo) {
         document.getElementById('especialidadPsicologo').textContent = selectedOption.dataset.especialidad || '-';
-        document.getElementById('telefonoPsicologo').textContent = selectedOption.dataset.telefono || '-';
         document.getElementById('emailPsicologo').textContent = selectedOption.dataset.email || '-';
         infoDiv.style.display = 'block';
     } else {
@@ -421,37 +384,32 @@ function verificarDisponibilidad() {
     // Mostrar modal
     const modal = new bootstrap.Modal(document.getElementById('disponibilidadModal'));
     modal.show();
-    
-    // Simular carga de disponibilidad (aquí se haría una petición AJAX real)
-    setTimeout(() => {
-        const content = document.getElementById('disponibilidadContent');
-        content.innerHTML = `
-            <h6>Disponibilidad para ${fecha}</h6>
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 class="text-success">
-                        <i class="bi bi-check-circle me-2"></i>Horarios Disponibles
-                    </h6>
-                    <div class="list-group">
-                        <div class="list-group-item">09:00 - 10:00</div>
-                        <div class="list-group-item">11:30 - 12:30</div>
-                        <div class="list-group-item">14:00 - 15:00</div>
-                        <div class="list-group-item">16:30 - 17:30</div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <h6 class="text-danger">
-                        <i class="bi bi-x-circle me-2"></i>Horarios Ocupados
-                    </h6>
-                    <div class="list-group">
-                        <div class="list-group-item">08:00 - 09:00</div>
-                        <div class="list-group-item">10:00 - 11:00</div>
-                        <div class="list-group-item">15:00 - 16:00</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }, 1000);
+    // Cargar disponibilidad real (evitar evaluar EL de JSP dentro de template literals)
+    fetch(ctx + '/admin/citas/horas?psicologo=' + encodeURIComponent(idPsicologo) + '&fecha=' + encodeURIComponent(fecha), { headers: { 'Accept': 'application/json' }})
+        .then(r => r.ok ? r.json() : { disponibles: [], ocupadas: [] })
+        .then(data => {
+            const content = document.getElementById('disponibilidadContent');
+            const isArr = Array.isArray(data);
+            const disp = isArr ? data : (data.disponibles || []);
+            const occ = isArr ? [] : (data.ocupadas || []);
+            const items = xs => (xs && xs.length)
+                ? xs.map(function(h){ return '<div class="list-group-item">' + h + '</div>'; }).join('')
+                : '<div class="text-muted small">Sin registros</div>';
+            content.innerHTML =
+                '<div class="row">'
+                + '  <div class="col-md-6">'
+                + '    <h6 class="text-success"><i class="bi bi-check-circle me-2"></i>Horarios Disponibles</h6>'
+                + '    <div class="list-group">' + items(disp) + '</div>'
+                + '  </div>'
+                + '  <div class="col-md-6">'
+                + '    <h6 class="text-danger"><i class="bi bi-x-circle me-2"></i>Horarios Ocupados</h6>'
+                + '    <div class="list-group">' + items(occ) + '</div>'
+                + '  </div>'
+                + '</div>';
+        })
+        .catch(() => {
+            document.getElementById('disponibilidadContent').innerHTML = '<div class="text-danger">No se pudo cargar la disponibilidad</div>';
+        });
 }
 
 function confirmarEliminacion() {
@@ -463,7 +421,8 @@ function confirmarEliminacion() {
         const input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'id';
-        input.value = '${cita.id}';
+        const idHidden = document.querySelector('input[name="id"]');
+        input.value = idHidden ? idHidden.value : '';
         
         form.appendChild(input);
         document.body.appendChild(form);
@@ -475,8 +434,57 @@ function confirmarEliminacion() {
 document.addEventListener('DOMContentLoaded', function() {
     const idPaciente = document.querySelector('select[name="idPaciente"]').value;
     const idPsicologo = document.querySelector('select[name="idPsicologo"]').value;
+    const fecha = document.querySelector('input[name="fecha"]').value;
     
     if (idPaciente) cargarInfoPaciente(idPaciente);
     if (idPsicologo) cargarInfoPsicologo(idPsicologo);
+    // Si hay psicólogo y fecha preseleccionados (modo edición), cargar horas
+    if (idPsicologo && fecha) onFechaOrPsicoChange();
+});
+</script>
+<script>
+function onFechaOrPsicoChange(){
+    const idPs = document.querySelector('select[name="idPsicologo"]').value;
+    const fecha = document.querySelector('input[name="fecha"]').value;
+    const selectHora = document.getElementById('selectHora');
+    if (!idPs || !fecha) return;
+    // limpiar
+    const prev = selectHora.value;
+    selectHora.innerHTML = '<option value="">Cargando...</option>';
+    fetch(ctx + '/admin/citas/horas?psicologo=' + encodeURIComponent(idPs) + '&fecha=' + encodeURIComponent(fecha), { headers: { 'Accept': 'application/json' }})
+        .then(r => r.ok ? r.json() : { disponibles: [] })
+        .then(data => {
+            selectHora.innerHTML = '<option value="">Seleccionar hora...</option>';
+            const horas = Array.isArray(data) ? data : (data.disponibles || []);
+            if (Array.isArray(horas)) {
+                horas.forEach(h => {
+                    const opt = document.createElement('option');
+                    opt.value = h; opt.textContent = h;
+                    selectHora.appendChild(opt);
+                });
+                // Restaurar selección previa si aún está disponible
+                if (prev && horas.includes(prev)) {
+                    selectHora.value = prev;
+                }
+            }
+            if (!horas || horas.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Sin horarios disponibles';
+                opt.disabled = true;
+                selectHora.appendChild(opt);
+            }
+        })
+        .catch(() => {
+            selectHora.innerHTML = '<option value="">Sin horarios disponibles</option>';
+        });
+}
+// También cuando cambia el psicólogo
+const psSel = document.querySelector('select[name="idPsicologo"]');
+if (psSel) psSel.addEventListener('change', onFechaOrPsicoChange);
+// Cuando cambia el paciente, actualizar panel de información
+const pacienteSel = document.querySelector('select[name="idPaciente"]');
+if (pacienteSel) pacienteSel.addEventListener('change', function(){
+    cargarInfoPaciente(this.value);
 });
 </script>

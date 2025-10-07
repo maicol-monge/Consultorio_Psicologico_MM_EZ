@@ -1,3 +1,7 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!-- Vista de Calendario -->
 <div class="fade-in-up">
     <!-- Header -->
@@ -47,7 +51,6 @@
                     <select id="filtroEstado" class="form-select" onchange="filtrarCalendario()">
                         <option value="">Todos los estados</option>
                         <option value="pendiente">Pendiente</option>
-                        <option value="confirmada">Confirmada</option>
                         <option value="realizada">Realizada</option>
                         <option value="cancelada">Cancelada</option>
                     </select>
@@ -95,9 +98,7 @@
                 <span class="badge bg-warning">
                     <i class="bi bi-clock me-1"></i>Pendiente
                 </span>
-                <span class="badge bg-info">
-                    <i class="bi bi-check-circle me-1"></i>Confirmada
-                </span>
+                
                 <span class="badge bg-success">
                     <i class="bi bi-check-circle-fill me-1"></i>Realizada
                 </span>
@@ -389,8 +390,8 @@ function renderizarMes(container) {
     
     let html = '<div class="calendario-header">';
     const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    diasSemana.forEach(dia => {
-        html += `<div class="calendario-header-dia">${dia}</div>`;
+    diasSemana.forEach(function(dia) {
+        html += '<div class="calendario-header-dia">' + dia + '</div>';
     });
     html += '</div>';
     
@@ -400,9 +401,9 @@ function renderizarMes(container) {
     const mesAnterior = new Date(fechaActual.getFullYear(), fechaActual.getMonth(), 0);
     for (let i = primerDiaSemana - 1; i >= 0; i--) {
         const dia = mesAnterior.getDate() - i;
-        html += `<div class="calendario-dia otro-mes">
-            <div class="numero">${dia}</div>
-        </div>`;
+        html += '<div class="calendario-dia otro-mes">'
+              + '  <div class="numero">' + dia + '</div>'
+              + '</div>';
     }
     
     // Días del mes actual
@@ -410,27 +411,27 @@ function renderizarMes(container) {
         const fecha = new Date(fechaActual.getFullYear(), fechaActual.getMonth(), dia);
         const esHoy = esMismaFecha(fecha, new Date());
         const citasDelDia = obtenerCitasDelDia(fecha);
-        
-        html += `<div class="calendario-dia ${esHoy ? 'hoy' : ''}" onclick="abrirCitaRapida('${formatearFecha(fecha)}')">
-            <div class="numero">${dia}</div>`;
-            
-        citasDelDia.forEach(cita => {
+        const claseHoy = esHoy ? ' hoy' : '';
+        html += '<div class="calendario-dia' + claseHoy + '" onclick="abrirCitaRapida(\'' + formatearFecha(fecha) + '\')">'
+              + '  <div class="numero">' + dia + '</div>';
+
+        citasDelDia.forEach(function(cita) {
             const hora = new Date(cita.fechaHora).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
-            html += `<div class="cita ${cita.estadoCita}" onclick="event.stopPropagation(); verDetalleCita(${cita.id})" 
-                         title="${hora} - ${cita.pacienteNombre}">
-                ${hora} ${cita.pacienteNombre}
-            </div>`;
+            html += '<div class="cita ' + cita.estadoCita + '" onclick="event.stopPropagation(); verDetalleCita(' + cita.id + ')" '
+                 + '     title="' + hora + ' - ' + cita.pacienteNombre + '">'
+                 +      hora + ' ' + cita.pacienteNombre
+                 + '</div>';
         });
-        
+
         html += '</div>';
     }
     
     // Días del siguiente mes
     const diasRestantes = 42 - (primerDiaSemana + ultimoDia);
     for (let dia = 1; dia <= diasRestantes; dia++) {
-        html += `<div class="calendario-dia otro-mes">
-            <div class="numero">${dia}</div>
-        </div>`;
+        html += '<div class="calendario-dia otro-mes">'
+              + '  <div class="numero">' + dia + '</div>'
+              + '</div>';
     }
     
     html += '</div>';
@@ -522,28 +523,26 @@ function verDetalleCita(idCita) {
     
     const contenido = document.getElementById('contenidoDetalleCita');
     const fecha = new Date(cita.fechaHora);
-    
-    contenido.innerHTML = `
-        <div class="row">
-            <div class="col-md-6">
-                <h6><i class="bi bi-calendar-date me-2"></i>Fecha y Hora</h6>
-                <p>${fecha.toLocaleDateString('es-ES')} a las ${fecha.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}</p>
-                
-                <h6><i class="bi bi-person-heart me-2"></i>Paciente</h6>
-                <p>${cita.pacienteNombre}</p>
-                
-                <h6><i class="bi bi-person-check me-2"></i>Psicólogo</h6>
-                <p>${cita.psicologoNombre}</p>
-            </div>
-            <div class="col-md-6">
-                <h6><i class="bi bi-circle-fill me-2"></i>Estado</h6>
-                <p><span class="badge bg-${obtenerColorEstado(cita.estadoCita)}">${cita.estadoCita}</span></p>
-                
-                <h6><i class="bi bi-chat-left-text me-2"></i>Motivo de Consulta</h6>
-                <p>${cita.motivoConsulta}</p>
-            </div>
-        </div>
-    `;
+    const fechaTexto = fecha.toLocaleDateString('es-ES');
+    const horaTexto = fecha.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
+    const badgeColor = obtenerColorEstado(cita.estadoCita);
+    contenido.innerHTML = ''
+        + '<div class="row">'
+        + '  <div class="col-md-6">'
+        + '    <h6><i class="bi bi-calendar-date me-2"></i>Fecha y Hora</h6>'
+        + '    <p>' + fechaTexto + ' a las ' + horaTexto + '</p>'
+        + '    <h6><i class="bi bi-person-heart me-2"></i>Paciente</h6>'
+        + '    <p>' + cita.pacienteNombre + '</p>'
+        + '    <h6><i class="bi bi-person-check me-2"></i>Psicólogo</h6>'
+        + '    <p>' + cita.psicologoNombre + '</p>'
+        + '  </div>'
+        + '  <div class="col-md-6">'
+        + '    <h6><i class="bi bi-circle-fill me-2"></i>Estado</h6>'
+        + '    <p><span class="badge bg-' + badgeColor + '">' + cita.estadoCita + '</span></p>'
+        + '    <h6><i class="bi bi-chat-left-text me-2"></i>Motivo de Consulta</h6>'
+        + '    <p>' + (cita.motivoConsulta || '') + '</p>'
+        + '  </div>'
+        + '</div>';
     
     const btnEditar = document.getElementById('btnEditarCita');
     if (cita.estadoCita !== 'realizada' && cita.estadoCita !== 'cancelada') {

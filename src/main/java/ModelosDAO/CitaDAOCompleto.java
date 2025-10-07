@@ -22,14 +22,14 @@ public class CitaDAOCompleto {
     
     // Método para crear una nueva cita
     public boolean crear(Cita cita) {
-        String sql = "INSERT INTO Cita (id_paciente, id_psicologo, fecha_hora, motivo_consulta, estado_cita, observaciones) VALUES (?, ?, ?, ?, ?, ?)";
+        // La tabla Cita en BD no tiene columna 'observaciones'. Ajustamos el INSERT.
+        String sql = "INSERT INTO Cita (id_paciente, id_psicologo, fecha_hora, motivo_consulta, estado_cita) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, cita.getIdPaciente());
             stmt.setInt(2, cita.getIdPsicologo());
             stmt.setTimestamp(3, new Timestamp(cita.getFechaHora().getTime()));
             stmt.setString(4, cita.getMotivoConsulta());
             stmt.setString(5, cita.getEstadoCita());
-            stmt.setString(6, cita.getObservaciones());
             
             int result = stmt.executeUpdate();
             if (result > 0) {
@@ -47,15 +47,15 @@ public class CitaDAOCompleto {
     
     // Método para actualizar una cita
     public boolean actualizar(Cita cita) {
-        String sql = "UPDATE Cita SET id_paciente = ?, id_psicologo = ?, fecha_hora = ?, motivo_consulta = ?, estado_cita = ?, observaciones = ? WHERE id = ?";
+        // La tabla Cita en BD no tiene columna 'observaciones'. Ajustamos el UPDATE.
+        String sql = "UPDATE Cita SET id_paciente = ?, id_psicologo = ?, fecha_hora = ?, motivo_consulta = ?, estado_cita = ? WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, cita.getIdPaciente());
             stmt.setInt(2, cita.getIdPsicologo());
             stmt.setTimestamp(3, new Timestamp(cita.getFechaHora().getTime()));
             stmt.setString(4, cita.getMotivoConsulta());
             stmt.setString(5, cita.getEstadoCita());
-            stmt.setString(6, cita.getObservaciones());
-            stmt.setInt(7, cita.getId());
+            stmt.setInt(6, cita.getId());
             
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -210,6 +210,38 @@ public class CitaDAOCompleto {
         }
         return false;
     }
+
+    // Horas ocupadas (confirmadas) para un psicólogo en una fecha (formato "HH:mm")
+    public Set<String> obtenerHorasOcupadasConfirmadas(int idPsicologo, java.util.Date fecha) {
+        Set<String> horas = new HashSet<>();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(fecha);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        Timestamp inicio = new Timestamp(cal.getTimeInMillis());
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+        Timestamp fin = new Timestamp(cal.getTimeInMillis());
+
+    // Considerar como ocupadas todas las citas no canceladas (incluye 'pendiente' y 'confirmada')
+    String sql = "SELECT TIME(fecha_hora) as h FROM Cita WHERE id_psicologo=? AND fecha_hora>=? AND fecha_hora<? AND estado_cita <> 'cancelada'";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, idPsicologo);
+            ps.setTimestamp(2, inicio);
+            ps.setTimestamp(3, fin);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Time t = rs.getTime("h");
+                    String hh = String.format("%02d:%02d", t.toLocalTime().getHour(), t.toLocalTime().getMinute());
+                    horas.add(hh);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return horas;
+    }
     
     // Método para cambiar estado de una cita
     public boolean cambiarEstado(int id, String estado) {
@@ -258,18 +290,46 @@ public class CitaDAOCompleto {
         cita.setFechaHora(rs.getTimestamp("fecha_hora"));
         cita.setMotivoConsulta(rs.getString("motivo_consulta"));
         cita.setEstadoCita(rs.getString("estado_cita"));
-        cita.setObservaciones(rs.getString("observaciones"));
-        cita.setQrCode(rs.getString("qr_code"));
-        cita.setEstado(rs.getString("estado"));
-        
-        // Campos adicionales de las consultas con JOIN
-        try {
-            cita.setPacienteNombre(rs.getString("paciente_nombre"));
-            cita.setPsicologoNombre(rs.getString("psicologo_nombre"));
-        } catch (SQLException e) {
-            // Ignorar si no existen estos campos
+
+        // Columnas opcionales: solo asignar si existen en el ResultSet
+        // Observaciones no está en la tabla actual; no asignar a menos que exista
+        if (hasColumn(rs, "observaciones")) {
+            cita.setObservaciones(rs.getString("observaciones"));
+        } else {
+            cita.setObservaciones(null);
         }
-        
+        if (hasColumn(rs, "qr_code")) {
+            cita.setQrCode(rs.getString("qr_code"));
+        }
+        if (hasColumn(rs, "estado")) {
+            cita.setEstado(rs.getString("estado"));
+        }
+
+        // Campos adicionales de JOINs
+        if (hasColumn(rs, "paciente_nombre")) {
+            cita.setPacienteNombre(rs.getString("paciente_nombre"));
+        }
+        if (hasColumn(rs, "psicologo_nombre")) {
+            cita.setPsicologoNombre(rs.getString("psicologo_nombre"));
+        }
+
         return cita;
+    }
+
+    // Verifica si una columna existe en el ResultSet actual
+    private boolean hasColumn(ResultSet rs, String columnLabel) {
+        try {
+            ResultSetMetaData md = rs.getMetaData();
+            int columns = md.getColumnCount();
+            for (int i = 1; i <= columns; i++) {
+                if (columnLabel.equalsIgnoreCase(md.getColumnLabel(i)) ||
+                    columnLabel.equalsIgnoreCase(md.getColumnName(i))) {
+                    return true;
+                }
+            }
+        } catch (SQLException e) {
+            // Ignorar y considerar que no existe
+        }
+        return false;
     }
 }
