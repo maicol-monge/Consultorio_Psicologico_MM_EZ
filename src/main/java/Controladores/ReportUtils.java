@@ -12,13 +12,69 @@ public class ReportUtils {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String desdeStr = req.getParameter("desde");
         String hastaStr = req.getParameter("hasta");
-        Calendar cal = Calendar.getInstance();
-        java.util.Date hasta;
         java.util.Date desde;
+        java.util.Date hasta;
         try {
-            if (hastaStr != null) hasta = sdf.parse(hastaStr); else hasta = cal.getTime();
-            if (desdeStr != null) desde = sdf.parse(desdeStr); else { cal.add(Calendar.DAY_OF_MONTH, -defaultDaysBack); desde = cal.getTime(); }
-        } catch (ParseException e) { cal = Calendar.getInstance(); hasta = cal.getTime(); cal.add(Calendar.DAY_OF_MONTH, -defaultDaysBack); desde = cal.getTime(); }
+            // Calcular DESDE al inicio del día
+            if (desdeStr != null && !desdeStr.isEmpty()) {
+                java.util.Date d = sdf.parse(desdeStr);
+                Calendar cDesde = Calendar.getInstance();
+                cDesde.setTime(d);
+                cDesde.set(Calendar.HOUR_OF_DAY, 0);
+                cDesde.set(Calendar.MINUTE, 0);
+                cDesde.set(Calendar.SECOND, 0);
+                cDesde.set(Calendar.MILLISECOND, 0);
+                desde = cDesde.getTime();
+            } else {
+                Calendar cDesde = Calendar.getInstance();
+                cDesde.add(Calendar.DAY_OF_MONTH, -defaultDaysBack);
+                cDesde.set(Calendar.HOUR_OF_DAY, 0);
+                cDesde.set(Calendar.MINUTE, 0);
+                cDesde.set(Calendar.SECOND, 0);
+                cDesde.set(Calendar.MILLISECOND, 0);
+                desde = cDesde.getTime();
+            }
+
+            // Calcular HASTA al final del día
+            if (hastaStr != null && !hastaStr.isEmpty()) {
+                java.util.Date h = sdf.parse(hastaStr);
+                Calendar cHasta = Calendar.getInstance();
+                cHasta.setTime(h);
+                cHasta.set(Calendar.HOUR_OF_DAY, 23);
+                cHasta.set(Calendar.MINUTE, 59);
+                cHasta.set(Calendar.SECOND, 59);
+                cHasta.set(Calendar.MILLISECOND, 999);
+                hasta = cHasta.getTime();
+            } else {
+                Calendar cHasta = Calendar.getInstance();
+                cHasta.set(Calendar.HOUR_OF_DAY, 23);
+                cHasta.set(Calendar.MINUTE, 59);
+                cHasta.set(Calendar.SECOND, 59);
+                cHasta.set(Calendar.MILLISECOND, 999);
+                hasta = cHasta.getTime();
+            }
+
+            // Si por error el rango viene invertido, intercambiar
+            if (desde.after(hasta)) {
+                java.util.Date tmp = desde; desde = hasta; hasta = tmp;
+            }
+        } catch (ParseException e) {
+            // En caso de error de parseo, usar último "defaultDaysBack" días
+            Calendar cHasta = Calendar.getInstance();
+            cHasta.set(Calendar.HOUR_OF_DAY, 23);
+            cHasta.set(Calendar.MINUTE, 59);
+            cHasta.set(Calendar.SECOND, 59);
+            cHasta.set(Calendar.MILLISECOND, 999);
+            hasta = cHasta.getTime();
+
+            Calendar cDesde = Calendar.getInstance();
+            cDesde.add(Calendar.DAY_OF_MONTH, -defaultDaysBack);
+            cDesde.set(Calendar.HOUR_OF_DAY, 0);
+            cDesde.set(Calendar.MINUTE, 0);
+            cDesde.set(Calendar.SECOND, 0);
+            cDesde.set(Calendar.MILLISECOND, 0);
+            desde = cDesde.getTime();
+        }
         return new java.util.Date[]{desde, hasta};
     }
 
