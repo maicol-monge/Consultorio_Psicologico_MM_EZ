@@ -350,6 +350,7 @@ let citasData = [];
     <c:set var="citasJson" value="${citasJson}{"/>
     <c:set var="citasJson" value='${citasJson}"id": ${cita.id},'/>
     <c:set var="citasJson" value='${citasJson}"fechaHora": "${cita.fechaHora}",'/>
+    <c:set var="citasJson" value='${citasJson}"fechaDia": "${fn:substring(cita.fechaHora, 0, 10)}",'/>
     <c:set var="citasJson" value='${citasJson}"pacienteNombre": "${cita.pacienteNombre}",'/>
     <c:set var="citasJson" value='${citasJson}"psicologoNombre": "${cita.psicologoNombre}",'/>
     <c:set var="citasJson" value='${citasJson}"motivoConsulta": "${cita.motivoConsulta}",'/>
@@ -380,6 +381,9 @@ function renderizarCalendario() {
     }
     
     actualizarTitulo();
+    // Actualiza total con filtros aplicados (global, no solo mes)
+    const totalSpan = document.getElementById('totalCitas');
+    if (totalSpan) totalSpan.textContent = getCitasFiltradas().length;
 }
 
 function renderizarMes(container) {
@@ -416,7 +420,7 @@ function renderizarMes(container) {
               + '  <div class="numero">' + dia + '</div>';
 
         citasDelDia.forEach(function(cita) {
-            const hora = new Date(cita.fechaHora).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
+            const hora = formatHoraES(cita.fechaHora);
             html += '<div class="cita ' + cita.estadoCita + '" onclick="event.stopPropagation(); verDetalleCita(' + cita.id + ')" '
                  + '     title="' + hora + ' - ' + cita.pacienteNombre + '">'
                  +      hora + ' ' + cita.pacienteNombre
@@ -461,16 +465,13 @@ function renderizarDia(container) {
 }
 
 function obtenerCitasDelDia(fecha) {
-    return citasData.filter(cita => {
-        const fechaCita = new Date(cita.fechaHora);
-        return esMismaFecha(fecha, fechaCita);
-    });
+    const ymd = dateToYMD_TZ(fecha, 'America/El_Salvador');
+    return getCitasFiltradas().filter(cita => cita.fechaDia === ymd);
 }
 
 function esMismaFecha(fecha1, fecha2) {
-    return fecha1.getDate() === fecha2.getDate() &&
-           fecha1.getMonth() === fecha2.getMonth() &&
-           fecha1.getFullYear() === fecha2.getFullYear();
+    // Comparación por zona El Salvador para coherencia
+    return dateToYMD_TZ(fecha1, 'America/El_Salvador') === dateToYMD_TZ(fecha2, 'America/El_Salvador');
 }
 
 function formatearFecha(fecha) {
@@ -479,8 +480,8 @@ function formatearFecha(fecha) {
 
 function actualizarTitulo() {
     const titulo = document.getElementById('tituloCalendario');
-    const opciones = { year: 'numeric', month: 'long' };
-    titulo.textContent = fechaActual.toLocaleDateString('es-ES', opciones);
+    const opciones = { year: 'numeric', month: 'long', timeZone: 'America/El_Salvador' };
+    titulo.textContent = new Intl.DateTimeFormat('es-SV', opciones).format(fechaActual);
 }
 
 function navegarCalendario(direccion) {
@@ -503,17 +504,35 @@ function irHoy() {
 }
 
 function filtrarCalendario() {
-    const filtroPsicologo = document.getElementById('filtroPsicologo').value;
-    const filtroEstado = document.getElementById('filtroEstado').value;
-    
-    // Aplicar filtros a citasData
-    // Esta funcionalidad se completaría con lógica de filtrado
+    // Re-render con filtros aplicados
     renderizarCalendario();
+}
+
+function getCitasFiltradas() {
+    const filtroPsicologo = document.getElementById('filtroPsicologo')?.value || '';
+    const filtroEstado = document.getElementById('filtroEstado')?.value || '';
+    return citasData.filter(c => {
+        const okPs = !filtroPsicologo || String(c.idPsicologo) === String(filtroPsicologo);
+        const okEstado = !filtroEstado || String(c.estadoCita) === String(filtroEstado);
+        return okPs && okEstado;
+    });
+}
+
+function dateToYMD_TZ(date, timeZone) {
+    // 'sv-SE' + timeZone devuelve YYYY-MM-DD estable
+    return new Intl.DateTimeFormat('sv-SE', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+}
+
+function formatHoraES(fechaHoraStr) {
+    // Intentar soportar navegadores variados
+    const safeStr = String(fechaHoraStr).replace(' ', 'T');
+    const d = new Date(safeStr);
+    return new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador', hour: '2-digit', minute: '2-digit' }).format(d);
 }
 
 function abrirCitaRapida(fecha) {
     document.getElementById('fechaSeleccionada').value = fecha;
-    document.getElementById('fechaHoraDisplay').textContent = new Date(fecha).toLocaleDateString('es-ES');
+    document.getElementById('fechaHoraDisplay').textContent = new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador' }).format(new Date(fecha));
     new bootstrap.Modal(document.getElementById('citaRapidaModal')).show();
 }
 
@@ -522,9 +541,9 @@ function verDetalleCita(idCita) {
     if (!cita) return;
     
     const contenido = document.getElementById('contenidoDetalleCita');
-    const fecha = new Date(cita.fechaHora);
-    const fechaTexto = fecha.toLocaleDateString('es-ES');
-    const horaTexto = fecha.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
+    const fecha = new Date(String(cita.fechaHora).replace(' ', 'T'));
+    const fechaTexto = new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador' }).format(fecha);
+    const horaTexto = new Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador', hour: '2-digit', minute: '2-digit' }).format(fecha);
     const badgeColor = obtenerColorEstado(cita.estadoCita);
     contenido.innerHTML = ''
         + '<div class="row">'

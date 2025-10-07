@@ -16,12 +16,15 @@ public class CitaDAO {
     }
 
     public Map<String,Integer> citasPorPsicologo() {
-        String sql = "SELECT p.id AS id_psicologo, COUNT(*) AS total FROM Cita c JOIN Psicologo p ON p.id=c.id_psicologo GROUP BY p.id";
+        String sql = "SELECT u.nombre AS psicologo, COUNT(*) AS total " +
+                "FROM Cita c " +
+                "JOIN Psicologo p ON p.id=c.id_psicologo " +
+                "JOIN Usuario u ON u.id=p.id_usuario " +
+                "GROUP BY u.nombre " +
+                "ORDER BY u.nombre";
         Map<String,Integer> map = new LinkedHashMap<>();
         try (Connection c = cn.getConnection(); Statement st = c.createStatement(); ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()) {
-                map.put("Psicologo " + rs.getInt("id_psicologo"), rs.getInt("total"));
-            }
+            while (rs.next()) map.put(rs.getString("psicologo"), rs.getInt("total"));
         } catch (SQLException e) { e.printStackTrace(); }
         return map;
     }
