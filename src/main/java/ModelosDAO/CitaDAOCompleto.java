@@ -106,6 +106,43 @@ public class CitaDAOCompleto {
         }
         return citas;
     }
+
+    // Listado para pagos: solo citas realizadas, con filtros opcionales por fecha y nombres
+    public List<Cita> listarParaPagoFiltrado(String fechaInicio, String fechaFin, String pacienteLike, String psicologoLike) {
+        List<Cita> citas = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.*, p.nombre as paciente_nombre, u.nombre as psicologo_nombre " +
+                "FROM Cita c " +
+                "LEFT JOIN Paciente p ON c.id_paciente = p.id " +
+                "LEFT JOIN Psicologo ps ON c.id_psicologo = ps.id " +
+                "LEFT JOIN Usuario u ON ps.id_usuario = u.id WHERE c.estado_cita='realizada'"
+        );
+        List<Object> params = new ArrayList<>();
+        if (fechaInicio != null && !fechaInicio.isEmpty()) {
+            sql.append(" AND DATE(c.fecha_hora) >= ?");
+            params.add(fechaInicio);
+        }
+        if (fechaFin != null && !fechaFin.isEmpty()) {
+            sql.append(" AND DATE(c.fecha_hora) <= ?");
+            params.add(fechaFin);
+        }
+        if (pacienteLike != null && !pacienteLike.isEmpty()) {
+            sql.append(" AND p.nombre LIKE ?");
+            params.add("%" + pacienteLike + "%");
+        }
+        if (psicologoLike != null && !psicologoLike.isEmpty()) {
+            sql.append(" AND u.nombre LIKE ?");
+            params.add("%" + psicologoLike + "%");
+        }
+        sql.append(" ORDER BY c.fecha_hora DESC");
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) citas.add(mapearCita(rs));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return citas;
+    }
     
     // Método para buscar citas con filtros
     public List<Cita> buscarConFiltros(String fechaInicio, String fechaFin, String estado, Integer idPaciente, Integer idPsicologo) {

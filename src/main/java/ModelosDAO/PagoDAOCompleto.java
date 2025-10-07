@@ -4,7 +4,6 @@ import DB.cn;
 import Modelos.Pago;
 import java.sql.*;
 import java.util.*;
-import java.math.BigDecimal;
 
 public class PagoDAOCompleto {
     private Connection connection;
@@ -30,11 +29,11 @@ public class PagoDAOCompleto {
             } else {
                 stmt.setNull(1, Types.INTEGER);
             }
-            stmt.setDouble(2, pago.getMonto().doubleValue());
-            stmt.setDouble(3, pago.getMonto().doubleValue());
-            stmt.setTimestamp(4, new Timestamp(pago.getFechaPago().getTime()));
-            stmt.setString(5, pago.getEstado());
-            stmt.setString(6, "activo");
+            stmt.setBigDecimal(2, pago.getMontoBase());
+            stmt.setBigDecimal(3, pago.getMontoTotal() != null ? pago.getMontoTotal() : pago.getMontoBase());
+            stmt.setTimestamp(4, new Timestamp(pago.getFecha() != null ? pago.getFecha().getTime() : System.currentTimeMillis()));
+            stmt.setString(5, pago.getEstadoPago() != null ? pago.getEstadoPago() : "pagado");
+            stmt.setString(6, pago.getEstado() != null ? pago.getEstado() : "activo");
             
             int result = stmt.executeUpdate();
             if (result > 0) {
@@ -52,7 +51,7 @@ public class PagoDAOCompleto {
     
     // Método para buscar pago por ID
     public Pago buscarPorId(int id) {
-        String sql = "SELECT p.*, c.motivo_consulta as cita_info, pa.nombre as paciente_nombre " +
+    String sql = "SELECT p.*, c.motivo_consulta as cita_info, pa.nombre as paciente_nombre " +
                     "FROM Pago p " +
                     "LEFT JOIN Cita c ON p.id_cita = c.id " +
                     "LEFT JOIN Paciente pa ON c.id_paciente = pa.id " +
@@ -118,28 +117,16 @@ public class PagoDAOCompleto {
     private Pago mapearPago(ResultSet rs) throws SQLException {
         Pago pago = new Pago();
         pago.setId(rs.getInt("id"));
-        
-        // Manejar id_cita que puede ser null
         int idCita = rs.getInt("id_cita");
-        if (!rs.wasNull()) {
-            pago.setIdCita(idCita);
-        }
-        
-        pago.setMontoBase(rs.getDouble("monto_base"));
-        pago.setMontoTotal(rs.getDouble("monto_total"));
-        pago.setMonto(BigDecimal.valueOf(rs.getDouble("monto_base")));
-        pago.setFecha(rs.getTimestamp("fecha"));
-        pago.setFechaPago(rs.getTimestamp("fecha"));
+        if (!rs.wasNull()) pago.setIdCita(idCita);
+        pago.setMontoBase(rs.getBigDecimal("monto_base"));
+        pago.setMontoTotal(rs.getBigDecimal("monto_total"));
+        Timestamp f = rs.getTimestamp("fecha");
+        if (f != null) pago.setFecha(new java.util.Date(f.getTime()));
         pago.setEstadoPago(rs.getString("estado_pago"));
-        pago.setEstado(rs.getString("estado_pago"));
-        
-        try {
-            pago.setCitaInfo(rs.getString("cita_info"));
-            pago.setPacienteNombre(rs.getString("paciente_nombre"));
-        } catch (SQLException e) {
-            // Ignorar si no existen estos campos
-        }
-        
+        pago.setEstado(rs.getString("estado"));
+        // extras si existen
+        try { pago.setPacienteNombre(rs.getString("paciente_nombre")); } catch (SQLException ignore) {}
         return pago;
     }
 }

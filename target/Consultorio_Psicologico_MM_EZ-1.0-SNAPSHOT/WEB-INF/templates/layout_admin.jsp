@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-<div class="sidebar" id="sidebar">
+<div class="sidebar" id="sidebar" style="max-height:100vh; overflow-y:auto;">
     <div class="p-3">
         <div class="d-flex align-items-center mb-4">
             <i class="bi bi-heart-pulse-fill fs-2 me-3"></i>
@@ -58,9 +58,6 @@
                 </span>
                 <a class="nav-link ms-3 ${param.activeMenu == 'pagos' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/pagos">
                     <i class="bi bi-cash-stack me-2"></i><span class="sidebar-text">Gestionar Pagos</span>
-                </a>
-                <a class="nav-link ms-3 ${param.activeMenu == 'tickets' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/tickets">
-                    <i class="bi bi-receipt me-2"></i><span class="sidebar-text">Tickets</span>
                 </a>
             </div>
 

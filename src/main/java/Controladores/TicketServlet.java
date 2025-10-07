@@ -14,6 +14,9 @@ import javax.servlet.http.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 
 @WebServlet(name = "TicketServlet", urlPatterns = {"/ticket", "/ticket.png"})
 public class TicketServlet extends HttpServlet {
@@ -28,7 +31,7 @@ public class TicketServlet extends HttpServlet {
 
         if ("/ticket.png".equals(req.getServletPath())) {
             // Compose a supermarket-style narrow ticket 384px width (typical thermal printers)
-            int width = 384, height = 500;
+            int width = 384, height = 600;
             BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = img.createGraphics();
             g.setColor(Color.WHITE); g.fillRect(0,0,width,height);
@@ -37,10 +40,26 @@ public class TicketServlet extends HttpServlet {
             int y = 30;
             g.drawString("CONSULTORIO PSI", 80, y); y += 30;
             g.setFont(new Font("Monospaced", Font.PLAIN, 14));
+            // Timezone formatting for El Salvador
+            SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            df.setTimeZone(TimeZone.getTimeZone("America/El_Salvador"));
+            String fechaEmision = t.getFechaEmision() != null ? df.format(t.getFechaEmision()) : "-";
+            String fechaCita = t.getCitaFechaHora() != null ? df.format(t.getCitaFechaHora()) : "-";
+            DecimalFormat money = new DecimalFormat("$ #,##0.00");
+            String montoBase = money.format(t.getMontoBase());
+            String montoTotal = money.format(t.getMontoTotal());
+
             g.drawString("Ticket: " + t.getNumeroTicket(), 10, y); y += 20;
-            g.drawString("Codigo: " + (t.getCodigo()!=null?t.getCodigo():"-"), 10, y); y += 20;
-            g.drawString("Fecha: " + t.getFechaEmision(), 10, y); y += 20;
+            g.drawString("Código: " + (t.getCodigo()!=null?t.getCodigo():"-"), 10, y); y += 20;
+            g.drawString("Emisión: " + fechaEmision, 10, y); y += 20;
             y += 10;
+            g.drawLine(0, y, width, y); y += 10;
+            // Details
+            g.drawString("Paciente: " + (t.getPacienteNombre()!=null?t.getPacienteNombre():"-"), 10, y); y += 20;
+            g.drawString("Psicólogo: " + (t.getPsicologoNombre()!=null?t.getPsicologoNombre():"-"), 10, y); y += 20;
+            g.drawString("Cita: " + fechaCita, 10, y); y += 20;
+            g.drawString("Monto base: " + montoBase, 10, y); y += 20;
+            g.drawString("Monto total: " + montoTotal, 10, y); y += 25;
             g.drawLine(0, y, width, y); y += 10;
             g.drawString("Gracias por su pago", 80, y); y += 20;
             // QR

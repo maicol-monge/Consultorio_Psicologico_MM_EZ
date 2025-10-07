@@ -13,8 +13,12 @@ public class TicketPago {
     
     // Campos adicionales para vistas
     private double monto;
+    private double montoBase;
+    private double montoTotal;
     private String pacienteNombre;
     private String conceptoPago;
+    private String psicologoNombre;
+    private Date citaFechaHora;
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -33,8 +37,16 @@ public class TicketPago {
     
     public double getMonto() { return monto; }
     public void setMonto(double monto) { this.monto = monto; }
+    public double getMontoBase() { return montoBase; }
+    public void setMontoBase(double montoBase) { this.montoBase = montoBase; }
+    public double getMontoTotal() { return montoTotal; }
+    public void setMontoTotal(double montoTotal) { this.montoTotal = montoTotal; }
     public String getPacienteNombre() { return pacienteNombre; }
     public void setPacienteNombre(String pacienteNombre) { this.pacienteNombre = pacienteNombre; }
     public String getConceptoPago() { return conceptoPago; }
     public void setConceptoPago(String conceptoPago) { this.conceptoPago = conceptoPago; }
+    public String getPsicologoNombre() { return psicologoNombre; }
+    public void setPsicologoNombre(String psicologoNombre) { this.psicologoNombre = psicologoNombre; }
+    public Date getCitaFechaHora() { return citaFechaHora; }
+    public void setCitaFechaHora(Date citaFechaHora) { this.citaFechaHora = citaFechaHora; }
 }

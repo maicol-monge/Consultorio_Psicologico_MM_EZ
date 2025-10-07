@@ -93,9 +93,9 @@
                             </a>
                         </div>
                         <div class="col-6 col-md-4 col-lg-2">
-                            <a href="${pageContext.request.contextPath}/admin/psicologos/nuevo" class="btn btn-outline-info w-100 py-3">
+                            <a href="${pageContext.request.contextPath}/admin/usuarios/nuevo" class="btn btn-outline-info w-100 py-3">
                                 <i class="bi bi-person-badge fs-4 d-block mb-2"></i>
-                                <small>Nuevo Psicólogo</small>
+                                <small>Nuevo Usuario</small>
                             </a>
                         </div>
                         <div class="col-6 col-md-4 col-lg-2">
@@ -105,7 +105,7 @@
                             </a>
                         </div>
                         <div class="col-6 col-md-4 col-lg-2">
-                            <a href="${pageContext.request.contextPath}/admin/tickets" class="btn btn-outline-dark w-100 py-3">
+                            <a href="${pageContext.request.contextPath}/admin/pagos" class="btn btn-outline-dark w-100 py-3">
                                 <i class="bi bi-receipt fs-4 d-block mb-2"></i>
                                 <small>Consultar Tickets</small>
                             </a>
