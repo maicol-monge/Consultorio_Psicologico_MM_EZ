@@ -35,7 +35,8 @@
                                     <th>Fecha</th>
                                     <th>Paciente</th>
                                     <th>Psicólogo</th>
-                                    <th>Monto</th>
+                                    <th>Monto Base</th>
+                                    <th>Monto Total</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -45,6 +46,12 @@
                                         <td><fmt:formatDate value="${p.fecha}" pattern="dd/MM/yyyy HH:mm"/></td>
                                         <td>${p.pacienteNombre}</td>
                                         <td>${p.psicologoNombre}</td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${not empty p.montoBase}">$ <fmt:formatNumber value="${p.montoBase}" type="number" minFractionDigits="2"/></c:when>
+                                                <c:otherwise>-</c:otherwise>
+                                            </c:choose>
+                                        </td>
                                         <td>$ <fmt:formatNumber value="${p.montoTotal}" type="number" minFractionDigits="2"/></td>
                                         <td>
                                             <form method="post" action="${pageContext.request.contextPath}/admin/pagos/marcar-pagado" style="display:inline-block;">
