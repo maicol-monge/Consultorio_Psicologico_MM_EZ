@@ -43,7 +43,26 @@ public class PsicoAgendaServlet extends HttpServlet {
             String desde = req.getParameter("desde");
             String hasta = req.getParameter("hasta");
             String estado = req.getParameter("estado");
+            boolean noFiltros = (desde == null || desde.isEmpty()) && (hasta == null || hasta.isEmpty()) && (estado == null || estado.isEmpty());
+            if (noFiltros) {
+                // Por defecto: mostrar solo HOY y estado pendiente, orden ascendente por hora
+                TimeZone tz = TimeZone.getTimeZone("America/El_Salvador");
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                sdf.setTimeZone(tz);
+                String hoy = sdf.format(new java.util.Date());
+                desde = hoy;
+                hasta = hoy;
+                estado = "pendiente";
+                // Pasar defaults para que el formulario muestre estos valores
+                req.setAttribute("defaultDesde", desde);
+                req.setAttribute("defaultHasta", hasta);
+                req.setAttribute("defaultEstado", estado);
+            }
             List<Cita> citas = citaDAO.buscarConFiltros(desde, hasta, estado, null, idPs);
+            if (noFiltros) {
+                // Orden ascendente (temprano -> tarde) solo en la vista por defecto
+                citas.sort(Comparator.comparing(Cita::getFechaHora));
+            }
             req.setAttribute("citas", citas);
             req.getRequestDispatcher("/WEB-INF/views/psico/agenda/index.jsp").forward(req, resp);
             return;

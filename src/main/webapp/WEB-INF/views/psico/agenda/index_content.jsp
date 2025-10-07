@@ -16,22 +16,25 @@
 
   <div class="card mb-3">
     <div class="card-body">
+      <c:set var="desdeSel" value="${not empty param.desde ? param.desde : (not empty defaultDesde ? defaultDesde : '')}"/>
+      <c:set var="hastaSel" value="${not empty param.hasta ? param.hasta : (not empty defaultHasta ? defaultHasta : '')}"/>
+      <c:set var="estadoSel" value="${not empty param.estado ? param.estado : (not empty defaultEstado ? defaultEstado : '')}"/>
       <form class="row g-2 align-items-end" method="get" action="${pageContext.request.contextPath}/psico/agenda">
         <div class="col-6 col-md-auto">
           <label class="form-label small">Desde</label>
-          <input type="date" class="form-control form-control-sm" name="desde" value="${param.desde}"/>
+          <input type="date" class="form-control form-control-sm" name="desde" value="${desdeSel}"/>
         </div>
         <div class="col-6 col-md-auto">
           <label class="form-label small">Hasta</label>
-          <input type="date" class="form-control form-control-sm" name="hasta" value="${param.hasta}"/>
+          <input type="date" class="form-control form-control-sm" name="hasta" value="${hastaSel}"/>
         </div>
         <div class="col-12 col-md-auto">
           <label class="form-label small">Estado</label>
           <select name="estado" class="form-select form-select-sm">
-            <option value="" ${empty param.estado ? 'selected' : ''}>Todos</option>
-            <option value="pendiente" ${param.estado=='pendiente'?'selected':''}>Pendiente</option>
-            <option value="realizada" ${param.estado=='realizada'?'selected':''}>Realizada</option>
-            <option value="cancelada" ${param.estado=='cancelada'?'selected':''}>Cancelada</option>
+            <option value="" ${(empty estadoSel) ? 'selected' : ''}>Todos</option>
+            <option value="pendiente" ${estadoSel=='pendiente'?'selected':''}>Pendiente</option>
+            <option value="realizada" ${estadoSel=='realizada'?'selected':''}>Realizada</option>
+            <option value="cancelada" ${estadoSel=='cancelada'?'selected':''}>Cancelada</option>
           </select>
         </div>
         <div class="col-12 col-md-auto">
